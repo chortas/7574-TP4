@@ -10,6 +10,7 @@ class TopCivCalculator():
         self.output_queue = output_queue
         self.id_field = id_field
         self.sentinel_amount = sentinel_amount
+        self.act_sentinel = sentinel_amount
         self.civilizations = {}
     
     def start(self):
@@ -39,8 +40,10 @@ class TopCivCalculator():
             self.civilizations[civ] = len(token_by_civ)
 
     def __send_top_5(self, channel):
-        self.sentinel_amount -= 1
-        if self.sentinel_amount != 0: return
+        self.act_sentinel -= 1
+        if self.act_sentinel != 0: return
         logging.info(f"To send top 5 -> civilizations: {self.civilizations}")
         top_5_civilizations = dict(Counter(self.civilizations).most_common(5))
         send_message(channel, json.dumps(top_5_civilizations), queue_name=self.output_queue)
+        self.civilizations = {}
+        self.act_sentinel = self.sentinel_amount

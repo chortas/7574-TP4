@@ -72,3 +72,6 @@ class ReducerJoin():
         if len(result) != 0: 
             send_message(ch, json.dumps(result), queue_name=self.grouped_result_queue)
         send_message(ch, json.dumps({}), queue_name=self.grouped_result_queue)
+        self.matches_and_players = {}
+        self.len_join = 2
+        

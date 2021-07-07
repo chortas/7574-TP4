@@ -11,6 +11,7 @@ class ReducerGroupBy():
         self.grouped_players_queue = grouped_players_queue
         self.players_to_group = {}
         self.sentinel_amount = sentinel_amount
+        self.act_sentinel = sentinel_amount
         self.batch_to_send = batch_to_send
 
     def start(self):
@@ -35,8 +36,8 @@ class ReducerGroupBy():
             self.players_to_group[group_by_element].append(player)
 
     def __handle_end_group_by(self, ch):
-        self.sentinel_amount -= 1
-        if self.sentinel_amount != 0: return        
+        self.act_sentinel -= 1
+        if self.act_sentinel != 0: return        
         logging.info("[REDUCER_GROUP_BY] The client already sent all messages")
 
         result = {}
@@ -48,3 +49,5 @@ class ReducerGroupBy():
         
         if len(result) != 0: send_message(ch, json.dumps(result), queue_name=self.grouped_players_queue)
         send_message(ch, json.dumps({}), queue_name=self.grouped_players_queue)
+        self.players_to_group = {}
+        self.act_sentinel = self.sentinel_amount
