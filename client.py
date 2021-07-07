@@ -6,7 +6,7 @@ from threading import Thread
 from common.utils import *
 
 class Client:
-    def __init__(self, match_queue, match_file, player_queue, player_file, batch_to_send):
+    def __init__(self, match_queue, match_file, player_queue, player_file, batch_to_send, n_lines):
         self.match_queue = match_queue
         self.match_file = match_file
         self.player_queue = player_queue
@@ -14,6 +14,7 @@ class Client:
         self.batch_to_send = batch_to_send
         self.match_sender = Thread(target=self.__send_matches)
         self.player_sender = Thread(target=self.__send_players)
+        self.n_lines = n_lines
 
     def start(self):
         wait_for_rabbit()
@@ -40,18 +41,20 @@ class Client:
 
             with open(file_name, mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)    
+                counter_batch = 0
                 counter_lines = 0
-                global_counter = 0
                 lines = []
                 for element in csv_reader:
-                    global_counter += 1
-                    lines.append(element)
                     counter_lines += 1
-                    if counter_lines == self.batch_to_send:
-                        logging.info(f"[{file_name}] Read {self.batch_to_send} lines and global counter is {global_counter}")
+                    lines.append(element)
+                    counter_batch += 1
+                    if counter_lines == self.n_lines:
+                        break
+                    if counter_batch == self.batch_to_send:
+                        logging.info(f"[{file_name}] Read {self.batch_to_send} lines and global counter is {counter_lines}")
                         send_message(channel, json.dumps(lines), queue_name=queue)
                         lines = []
-                        counter_lines = 0
+                        counter_batch = 0
                 
         if len(lines) != 0: send_message(channel, json.dumps(lines), queue_name=queue)                    
         
