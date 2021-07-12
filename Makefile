@@ -33,6 +33,7 @@ docker-image:
 	docker build -f ./reducer_join/Dockerfile -t "reducer_join:latest" .
 	docker build -f ./winner_rate_calculator/Dockerfile -t "winner_rate_calculator:latest" .
 	docker build -f ./top_civ_calculator/Dockerfile -t "top_civ_calculator:latest" .
+	docker build -f ./interface/Dockerfile -t "interface:latest" .
 .PHONY: docker-image
 
 docker-compose-up: docker-image

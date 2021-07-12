@@ -359,3 +359,17 @@ services:
       - OUTPUT_QUEUE=output_queue_4
       - ID_FIELD=token
       - SENTINEL_AMOUNT=2
+
+  interface:
+    container_name: interface
+    image: interface:latest
+    entrypoint: python3 /main.py
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    links: 
+      - rabbitmq
+    environment:
+      - API_PORT=3000
+      - SENTINEL_AMOUNT=4
+      - INTERNAL_PORT=3001

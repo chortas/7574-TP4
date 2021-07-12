@@ -44,6 +44,10 @@ N_WINNER_RATE_CALCULATOR = 1
 # top_civ_calculator
 N_TOP_CIV_CALCULATOR = 1
 
+INTERNAL_PORT = 3001
+
+N_FINAL_NODES = N_FILTER_ARSD + N_FILTER_SOLO_WINNER_PLAYER + N_WINNER_RATE_CALCULATOR + N_TOP_CIV_CALCULATOR
+
 def write_header_and_rabbit(compose_file):
     compose_file.write(HEADER_AND_RABBIT)
 
@@ -182,3 +186,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     "SENTINEL_AMOUNT": N_REDUCERS_GROUP_BY_CIV_TOP_CIV}
     for i in range(1, N_TOP_CIV_CALCULATOR+1):
       write_section(compose_file, f"top_civ_calculator_{i}", "top_civ_calculator", env_variables)
+    
+    # interface
+    env_variables = {"API_PORT": 3000, "SENTINEL_AMOUNT": N_FINAL_NODES, "INTERNAL_PORT": INTERNAL_PORT}
+    write_section(compose_file, "interface", "interface", env_variables)
