@@ -3,6 +3,7 @@ import logging
 import os
 
 from filter_avg_rating_server_duration import FilterAvgRatingServerDuration
+from common.interface_communicator import InterfaceCommunicator
 
 def parse_config_params():
     config_params = {}
@@ -26,9 +27,10 @@ def main():
 
     config_params = parse_config_params()
 
+    interface_communicator = InterfaceCommunicator()
     filter_arsd = FilterAvgRatingServerDuration(config_params["match_queue"], 
     config_params["output_queue"], config_params["avg_rating_field"], 
-    config_params["server_field"], config_params["duration_field"], config_params["id_field"])
+    config_params["server_field"], config_params["duration_field"], config_params["id_field"], interface_communicator)
     filter_arsd.start()
 
 def initialize_log():

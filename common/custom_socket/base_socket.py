@@ -19,7 +19,8 @@ class Socket:
         size = bytes_8_to_number(self._recv(self.socket, NUMBER_SIZE))
         data = self._recv(self.socket, size)
         if decode:
-            return json.loads(data.decode('utf-8'))
+            decoded_data = data.decode('utf-8')
+            return {} if len(decoded_data) == 0 else json.loads(decoded_data)
         return data
 
     def _send(self, sock, data):

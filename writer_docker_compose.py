@@ -44,6 +44,8 @@ N_WINNER_RATE_CALCULATOR = 1
 # top_civ_calculator
 N_TOP_CIV_CALCULATOR = 1
 
+INTERFACE_IP = 'interface'
+
 INTERNAL_PORT = 3001
 
 N_FINAL_NODES = N_FILTER_ARSD + N_FILTER_SOLO_WINNER_PLAYER + N_WINNER_RATE_CALCULATOR + N_TOP_CIV_CALCULATOR
@@ -71,7 +73,9 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
 
     # filter_avg_rating_server_duration
     env_variables = {"MATCH_QUEUE": "filter_arsd_queue", "OUTPUT_QUEUE": "output_queue_1", 
-    "AVG_RATING_FIELD": "average_rating", "SERVER_FIELD": "server", "DURATION_FIELD": "duration", "ID_FIELD": "token"}
+    "AVG_RATING_FIELD": "average_rating", "SERVER_FIELD": "server",
+    "DURATION_FIELD": "duration", "ID_FIELD": "token",
+    "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT}
     for i in range(1, N_FILTER_ARSD+1):
       write_section(compose_file, f"filter_avg_rating_server_duration_{i}", "filter_avg_rating_server_duration", env_variables)
 
@@ -93,7 +97,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     
     # filter_solo_winner_player
     env_variables = {"GROUPED_PLAYERS_QUEUE": "grouped_players_queue_filter_swp", "OUTPUT_QUEUE": "output_queue_2", 
-    "RATING_FIELD": "rating", "WINNER_FIELD": "winner"}    
+    "RATING_FIELD": "rating", "WINNER_FIELD": "winner", "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT}    
     for i in range(1, N_FILTER_SOLO_WINNER_PLAYER+1):
       write_section(compose_file, f"filter_solo_winner_player_{i}", "filter_solo_winner_player", env_variables)
 
@@ -176,14 +180,17 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
 
     # winner_rate_calculator
     env_variables = {"GROUPED_PLAYERS_QUEUE": "winner_rate_calculator_queue", 
-    "OUTPUT_QUEUE": "output_queue_3", "WINNER_FIELD": "winner"}
+    "OUTPUT_QUEUE": "output_queue_3", "WINNER_FIELD": "winner", 
+    "SENTINEL_AMOUNT": N_REDUCERS_GROUP_BY_CIV_RATE_WINNER,
+    "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT}
     for i in range(1, N_WINNER_RATE_CALCULATOR+1):
       write_section(compose_file, f"winner_rate_calculator_{i}", "winner_rate_calculator", env_variables)
 
     # top_civ_calculator
     env_variables = {"GROUPED_PLAYERS_QUEUE": "top_civ_calculator_queue", 
     "OUTPUT_QUEUE": "output_queue_4", "ID_FIELD": "token", 
-    "SENTINEL_AMOUNT": N_REDUCERS_GROUP_BY_CIV_TOP_CIV}
+    "SENTINEL_AMOUNT": N_REDUCERS_GROUP_BY_CIV_TOP_CIV,
+    "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT}
     for i in range(1, N_TOP_CIV_CALCULATOR+1):
       write_section(compose_file, f"top_civ_calculator_{i}", "top_civ_calculator", env_variables)
     

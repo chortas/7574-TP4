@@ -24,6 +24,8 @@ services:
       - SERVER_FIELD=server
       - DURATION_FIELD=duration
       - ID_FIELD=token
+      - INTERFACE_IP=interface
+      - INTERFACE_PORT=3001
 
   matches_broadcaster:
     container_name: matches_broadcaster
@@ -97,6 +99,8 @@ services:
       - OUTPUT_QUEUE=output_queue_2
       - RATING_FIELD=rating
       - WINNER_FIELD=winner
+      - INTERFACE_IP=interface
+      - INTERFACE_PORT=3001
 
   filter_ladder_map_mirror:
     container_name: filter_ladder_map_mirror
@@ -344,6 +348,9 @@ services:
       - GROUPED_PLAYERS_QUEUE=winner_rate_calculator_queue
       - OUTPUT_QUEUE=output_queue_3
       - WINNER_FIELD=winner
+      - SENTINEL_AMOUNT=2
+      - INTERFACE_IP=interface
+      - INTERFACE_PORT=3001
 
   top_civ_calculator_1:
     container_name: top_civ_calculator_1
@@ -359,6 +366,8 @@ services:
       - OUTPUT_QUEUE=output_queue_4
       - ID_FIELD=token
       - SENTINEL_AMOUNT=2
+      - INTERFACE_IP=interface
+      - INTERFACE_PORT=3001
 
   interface:
     container_name: interface

@@ -3,6 +3,7 @@ import logging
 import os
 
 from top_civ_calculator import TopCivCalculator
+from common.interface_communicator import InterfaceCommunicator
 
 def parse_config_params():
     config_params = {}
@@ -23,10 +24,11 @@ def main():
     initialize_log()
 
     config_params = parse_config_params()
+    interface_communicator = InterfaceCommunicator()
 
     top_civ_calculator = TopCivCalculator(config_params["grouped_players_queue"], 
     config_params["output_queue"], config_params["id_field"], 
-    int(config_params["sentinel_amount"]))
+    int(config_params["sentinel_amount"]), interface_communicator)
     top_civ_calculator.start()
 
 def initialize_log():

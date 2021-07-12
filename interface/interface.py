@@ -17,10 +17,11 @@ class Interface():
             component_sock = self.internal_socket.accept()
             if not component_sock:
                 continue
+            logging.info("[INTERFACE] Connection accepted")
             info = self.internal_socket.recv_from(component_sock)
 
             if len(info) == 0: #sentinel
-                logging.info("[INTERFACE] Received 1 sentinel")
+                logging.info("[INTERFACE] Received 1 sentinel. Total: {}".format(self.sentinels_recieve+1))
                 self.sentinels_recieve +=1
                 if self.sentinels_recieve == self.sentinels_amount:
                     self.sentinels_recieve = 0

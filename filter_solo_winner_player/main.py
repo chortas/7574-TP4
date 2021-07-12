@@ -3,6 +3,7 @@ import logging
 import os
 
 from filter_solo_winner_player import FilterSoloWinnerPlayer
+from common.interface_communicator import InterfaceCommunicator
 
 def parse_config_params():
     config_params = {}
@@ -23,9 +24,10 @@ def main():
     initialize_log()
 
     config_params = parse_config_params()
+    interface_communicator = InterfaceCommunicator()
 
     filter_swp = FilterSoloWinnerPlayer(config_params["grouped_players_queue"], 
-    config_params["output_queue"], config_params["rating_field"], config_params["winner_field"])
+    config_params["output_queue"], config_params["rating_field"], config_params["winner_field"], interface_communicator)
     filter_swp.start()
 
 def initialize_log():
