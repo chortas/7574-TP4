@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
 import logging
+import threading
 from common.utils import *
 from common.custom_socket.server_socket import ServerSocket
 
 INITIAL_STATE = 'READY'
 
+from shared_value import SharedValue
+
 class Interface():
     def __init__(self, api_port, internal_port, sentinels_amount):
         self.sentinels_amount = sentinels_amount
-        self.state = INITIAL_STATE
+        self.state = SharedValue(INITIAL_STATE)
         self.internal_socket = ServerSocket('', internal_port, 1)
+        self.api_socket = ServerSocket('', api_port, 1)
         self.sentinels_recieve = 0
+
+        self.node_listener = threading.Thread(target=self._start_listening_nodes)
+        self.client_listener = threading.Thread(target=self._start_listening_clients)
     
-    def start(self):
+    def _start_listening_nodes(self):
         while True:
             component_sock = self.internal_socket.accept()
             if not component_sock:
                 continue
-            logging.info("[INTERFACE] Connection accepted")
+            logging.info("[INTERFACE] Component connection accepted")
             info = self.internal_socket.recv_from(component_sock)
 
             if len(info) == 0: #sentinel
@@ -25,10 +32,36 @@ class Interface():
                 self.sentinels_recieve +=1
                 if self.sentinels_recieve == self.sentinels_amount:
                     self.sentinels_recieve = 0
-                    self.state = 'READY'
-                    logging.info("[INTERFACE] Ready to recieve client requests")
+                    self.state.update('READY')
+                    logging.info("[INTERFACE] Ready to recieve client requests. Change state to READY")
 
             self.internal_socket.send_to(component_sock, ACK_SCHEME.pack(True), encode=False)
             component_sock.close()
+
+    def _start_listening_clients(self):
+        while True:
+            client_sock = self.api_socket.accept()
+            if not client_sock:
+                continue
+            logging.info("[INTERFACE] Client connection accepted")
+            info = self.api_socket.recv_from(client_sock)
+
+            if len(info) == 0: #sentinel
+                logging.info("[INTERFACE] Received client request")
+                if self.state.read() == 'READY':
+                    self.sentinels_recieve = 0
+                    self.state.update('RUNNING')
+                    logging.info("[INTERFACE] Accepting request of client. Change state to RUNNING")
+
+                    self.internal_socket.send_to(client_sock, ACK_SCHEME.pack(True), encode=False)
+                    client_sock.close()
+                    continue
+            self.internal_socket.send_to(client_sock, ACK_SCHEME.pack(False), encode=False)
+            client_sock.close()
+        
+    def start(self):
+        self.node_listener.start()
+        self.client_listener.start()
+
         
         

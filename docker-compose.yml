@@ -379,6 +379,8 @@ services:
     links: 
       - rabbitmq
     environment:
-      - API_PORT=3000
+      - API_PORT=3002
       - SENTINEL_AMOUNT=4
       - INTERNAL_PORT=3001
+    ports:
+      - "3002:3002"

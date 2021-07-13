@@ -53,7 +53,7 @@ N_FINAL_NODES = N_FILTER_ARSD + N_FILTER_SOLO_WINNER_PLAYER + N_WINNER_RATE_CALC
 def write_header_and_rabbit(compose_file):
     compose_file.write(HEADER_AND_RABBIT)
 
-def write_section(compose_file, container_name, image, env_variables):
+def write_section(compose_file, container_name, image, env_variables, export_port = None):
     section = f"""\n  {container_name}:
     container_name: {container_name}
     image: {image}:latest
@@ -66,6 +66,8 @@ def write_section(compose_file, container_name, image, env_variables):
     environment:\n"""
     for env, variable in env_variables.items():
       section += f"      - {env}={variable}\n"
+    if export_port:
+      section += f"""    ports:\n      - "{export_port}:{export_port}"\n"""
     compose_file.write(section)
 
 with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
@@ -195,5 +197,5 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
       write_section(compose_file, f"top_civ_calculator_{i}", "top_civ_calculator", env_variables)
     
     # interface
-    env_variables = {"API_PORT": 3000, "SENTINEL_AMOUNT": N_FINAL_NODES, "INTERNAL_PORT": INTERNAL_PORT}
-    write_section(compose_file, "interface", "interface", env_variables)
+    env_variables = {"API_PORT": 3002, "SENTINEL_AMOUNT": N_FINAL_NODES, "INTERNAL_PORT": INTERNAL_PORT}
+    write_section(compose_file, "interface", "interface", env_variables, export_port=env_variables['API_PORT'])
