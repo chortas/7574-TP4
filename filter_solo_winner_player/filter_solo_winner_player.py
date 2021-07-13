@@ -5,11 +5,12 @@ from datetime import datetime, timedelta
 from common.utils import *
 
 class FilterSoloWinnerPlayer():
-    def __init__(self, grouped_players_queue, output_queue, rating_field, winner_field):
+    def __init__(self, grouped_players_queue, output_queue, rating_field, winner_field, interface_communicator):
         self.grouped_players_queue = grouped_players_queue
         self.output_queue = output_queue
         self.rating_field = rating_field
         self.winner_field = winner_field
+        self.interface_communicator = interface_communicator
 
     def start(self):
         wait_for_rabbit()
@@ -25,6 +26,7 @@ class FilterSoloWinnerPlayer():
         matches = json.loads(body)
         if len(matches) == 0:
             logging.info(f"[FILTER_SOLO_WINNER_PLAYER] End of file")
+            self.interface_communicator.send_finish_message()
             return
         
         for match, players in matches.items():

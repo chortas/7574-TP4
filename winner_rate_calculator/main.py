@@ -3,6 +3,7 @@ import logging
 import os
 
 from winner_rate_calculator import WinnerRateCalculator
+from common.interface_communicator import InterfaceCommunicator
 
 def parse_config_params():
     config_params = {}
@@ -10,6 +11,7 @@ def parse_config_params():
         config_params["grouped_players_queue"] = os.environ["GROUPED_PLAYERS_QUEUE"]
         config_params["output_queue"] = os.environ["OUTPUT_QUEUE"]
         config_params["winner_field"] = os.environ["WINNER_FIELD"]
+        config_params["sentinel_amount"] = os.environ["SENTINEL_AMOUNT"]
         
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -22,9 +24,10 @@ def main():
     initialize_log()
 
     config_params = parse_config_params()
+    interface_communicator = InterfaceCommunicator()
 
     winner_rate_calculator = WinnerRateCalculator(config_params["grouped_players_queue"], 
-    config_params["output_queue"], config_params["winner_field"])
+    config_params["output_queue"], config_params["winner_field"], int(config_params["sentinel_amount"]), interface_communicator)
     winner_rate_calculator.start()
 
 def initialize_log():

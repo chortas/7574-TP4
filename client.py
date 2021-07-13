@@ -4,9 +4,10 @@ import csv
 import json
 from threading import Thread
 from common.utils import *
+from common.custom_socket.client_socket import ClientSocket
 
 class Client:
-    def __init__(self, match_queue, match_file, player_queue, player_file, batch_to_send, n_lines):
+    def __init__(self, match_queue, match_file, player_queue, player_file, batch_to_send, n_lines, api_address):
         self.match_queue = match_queue
         self.match_file = match_file
         self.player_queue = player_queue
@@ -15,12 +16,29 @@ class Client:
         self.match_sender = Thread(target=self.__send_matches)
         self.player_sender = Thread(target=self.__send_players)
         self.n_lines = n_lines
+        self.api_address = api_address
+
+    def _send_request(self):
+        sock = ClientSocket(address = self.api_address)
+        try:
+            sock.send_with_size(json.dumps({}))
+            response = ACK_SCHEME.unpack(sock.recv_with_size(decode=False))[0]
+        except Exception as e:
+            print(e)
+            logging.info("[CLIENT] Request errored")
+            response = False
+        sock.close()
+        return response 
 
     def start(self):
-        wait_for_rabbit()
-        
-        self.match_sender.start()
-        self.player_sender.start()
+        if self._send_request():
+            logging.info("[CLIENT] Request accepted")
+            wait_for_rabbit()
+            
+            self.match_sender.start()
+            self.player_sender.start()
+        else:
+            logging.info("[CLIENT] Request declined")
     
     def __send_players(self):
         self.__read_and_send(self.player_file, self.player_queue, "match_players_reducido.csv",

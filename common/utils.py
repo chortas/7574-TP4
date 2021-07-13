@@ -1,6 +1,9 @@
 import pika
 import time
 import logging
+import struct
+
+ACK_SCHEME = struct.Struct('?')
 
 def wait_for_rabbit():
     time.sleep(15)

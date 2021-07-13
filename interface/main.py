@@ -2,17 +2,17 @@
 import logging
 import os
 
-from filter_solo_winner_player import FilterSoloWinnerPlayer
-from common.interface_communicator import InterfaceCommunicator
+from interface import Interface
+from common.utils import *
 
 def parse_config_params():
     config_params = {}
     try:
-        config_params["grouped_players_queue"] = os.environ["GROUPED_PLAYERS_QUEUE"]
-        config_params["output_queue"] = os.environ["OUTPUT_QUEUE"]
-        config_params["rating_field"] = os.environ["RATING_FIELD"]
-        config_params["winner_field"] = os.environ["WINNER_FIELD"]
-
+        config_params["api_port"] = int(os.environ["API_PORT"])
+        config_params["internal_port"] = int(os.environ["INTERNAL_PORT"])
+        config_params["sentinel_amount"] =  (int(os.environ["SENTINEL_AMOUNT"])
+                                            if "SENTINEL_AMOUNT" in os.environ
+                                            else 1) 
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
     except ValueError as e:
@@ -24,11 +24,9 @@ def main():
     initialize_log()
 
     config_params = parse_config_params()
-    interface_communicator = InterfaceCommunicator()
 
-    filter_swp = FilterSoloWinnerPlayer(config_params["grouped_players_queue"], 
-    config_params["output_queue"], config_params["rating_field"], config_params["winner_field"], interface_communicator)
-    filter_swp.start()
+    interface = Interface(config_params['api_port'], config_params['internal_port'], config_params["sentinel_amount"])
+    interface.start()
 
 def initialize_log():
     """

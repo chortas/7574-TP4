@@ -7,13 +7,14 @@ from common.utils import *
 
 class FilterAvgRatingServerDuration():
     def __init__(self, match_queue, output_queue, avg_rating_field, server_field, 
-    duration_field, id_field):
+    duration_field, id_field, interface_communicator):
         self.match_queue = match_queue
         self.output_queue = output_queue
         self.avg_rating_field = avg_rating_field
         self.server_field = server_field
         self.duration_field = duration_field
         self.id_field = id_field
+        self.interface_communicator = interface_communicator
 
     def start(self):
         wait_for_rabbit()
@@ -27,6 +28,10 @@ class FilterAvgRatingServerDuration():
 
     def __callback(self, ch, method, properties, body):
         matches = json.loads(body)
+        if len(matches) == 0:
+            logging.info("[FILTER_AVG_RATING_SERVER_DURATION] The client already sent all messages")
+            self.interface_communicator.send_finish_message()
+            return
         for match in matches:
             if self.__meets_the_condition(match):
                 send_message(ch, match[self.id_field], queue_name=self.output_queue)
@@ -34,6 +39,7 @@ class FilterAvgRatingServerDuration():
     def __meets_the_condition(self, match):
         if len(match) == 0:
             logging.info("[FILTER_AVG_RATING_SERVER_DURATION] The client already sent all messages")
+            self.interface_communicator.send_finish_message()
             return False
         average_rating = int(match[self.avg_rating_field]) if match[self.avg_rating_field] else 0
         server = match[self.server_field]

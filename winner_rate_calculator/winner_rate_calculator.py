@@ -4,10 +4,13 @@ import json
 from common.utils import *
 
 class WinnerRateCalculator():
-    def __init__(self, grouped_players_queue, output_queue, winner_field):
+    def __init__(self, grouped_players_queue, output_queue, winner_field, sentinel_amount, interface_communicator):
         self.grouped_players_queue = grouped_players_queue
         self.output_queue = output_queue
         self.winner_field = winner_field
+        self.interface_communicator = interface_communicator
+        self.sentinel_amount = sentinel_amount
+        self.act_sentinel = sentinel_amount
     
     def start(self):
         wait_for_rabbit()
@@ -22,6 +25,14 @@ class WinnerRateCalculator():
     def __callback(self, ch, method, properties, body):
         logging.info("To send winner rate result")
         players_by_civ = json.loads(body)
+
+        if len(players_by_civ) == 0:
+            self.act_sentinel -= 1
+            if self.act_sentinel == 0:
+                self.act_sentinel = self.sentinel_amount
+                logging.info("[WINNER_RATE_CALCULATOR] End of file")
+                self.interface_communicator.send_finish_message()
+                return
 
         for civ in players_by_civ:
             victories = 0
