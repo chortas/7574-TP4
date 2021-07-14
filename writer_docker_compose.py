@@ -71,7 +71,12 @@ def write_section(compose_file, container_name, image, env_variables, export_por
       - rabbitmq
     environment:\n"""
 
-    if not monitor: section += section_monitor
+    if not monitor: 
+      section += section_monitor
+    else:
+      section += f"""    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock\n"""
+
     section += final_section
     
     for env, variable in env_variables.items():
@@ -82,6 +87,10 @@ def write_section(compose_file, container_name, image, env_variables, export_por
 
 with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     write_header_and_rabbit(compose_file)
+    
+    # monitor
+    env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10}
+    write_section(compose_file, "monitor", "monitor", env_variables, monitor = True)
 
     # filter_avg_rating_server_duration
     env_variables = {"MATCH_QUEUE": "filter_arsd_queue", "OUTPUT_QUEUE": "output_queue_1", 
@@ -267,7 +276,3 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     "INTERNAL_PORT": INTERNAL_PORT, "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT, 
     "FREQUENCY": MONITOR_FREQUENCY, "ID": "interface"}
     write_section(compose_file, "interface", "interface", env_variables, export_port=env_variables['API_PORT'])
-
-    # monitor
-    env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10}
-    write_section(compose_file, "monitor", "monitor", env_variables, monitor = True)

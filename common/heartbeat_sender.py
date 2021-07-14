@@ -35,7 +35,7 @@ class HeartbeatSender(Process):
             heartbeat_listener_socket = ClientSocket(address = (self.host, self.port))
 
             while True:
-                logging.info(f"[HEARTBEAT_SENDER] About to send heartbeat to {self.id}")
+                #logging.info(f"[HEARTBEAT_SENDER] About to send heartbeat to {self.id}")
                 heartbeat_listener_socket.send_with_size(json.dumps({"id": self.id}))
                 sleep(self.frequency)
 

@@ -1,4 +1,5 @@
 import logging
+import subprocess
 
 from multiprocessing import Process
 from common.custom_socket.server_socket import ServerSocket
@@ -15,13 +16,13 @@ class HeartbeatListener(Process):
     def run(self):
         component_sock = self.socket.accept()
 
-        logging.info("[HEARTBEAT_LISTENER] Antes del while")
+        #logging.info("[HEARTBEAT_LISTENER] Antes del while")
         while True:
             if not component_sock:
                 component_sock = self.socket.accept()
                 continue
             
-            logging.info("[HEARTBEAT_LISTENER] Node connection accepted")
+            #logging.info("[HEARTBEAT_LISTENER] Node connection accepted")
             try:
                 info = self.socket.recv_from(component_sock, recv_timeout = self.timeout)
                 if info["id"] == id:
@@ -32,6 +33,9 @@ class HeartbeatListener(Process):
 
             except:
                 logging.info(f"[HEARTBEAT_LISTENER] The id {self.id} has died :'(")
+                result = subprocess.run(['docker', 'start', self.id], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                logging.info('Command executed. Result={}. Output={}. Error={}'.format(result.returncode, result.stdout, result.stderr))
                 component_sock = self.socket.accept()
+
             
         component_sock.close()
