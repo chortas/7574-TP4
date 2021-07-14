@@ -30,7 +30,7 @@ class HeartbeatListener(Process):
                     # TODO: redirect request to monitor
                     pass
 
-            except timeout:
+            except:
                 logging.info(f"[HEARTBEAT_LISTENER] The id {self.id} has died :'(")
             
         component_sock.close()
