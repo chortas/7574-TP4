@@ -57,18 +57,23 @@ MONITOR_FREQUENCY = 3
 def write_header_and_rabbit(compose_file):
     compose_file.write(HEADER_AND_RABBIT)
 
-def write_section(compose_file, container_name, image, env_variables, export_port = None):
+def write_section(compose_file, container_name, image, env_variables, export_port = None, monitor = False):
     section = f"""\n  {container_name}:
     container_name: {container_name}
     image: {image}:latest
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
-      - monitor
-    links: 
+      - rabbitmq\n"""
+
+    section_monitor = f"""      - monitor\n"""
+    final_section = f"""    links: 
       - rabbitmq
     environment:\n"""
+
+    if not monitor: section += section_monitor
+    section += final_section
+    
     for env, variable in env_variables.items():
       section += f"      - {env}={variable}\n"
     if export_port:
@@ -265,4 +270,4 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
 
     # monitor
     env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10}
-    write_section(compose_file, "monitor", "monitor", env_variables)
+    write_section(compose_file, "monitor", "monitor", env_variables, monitor = True)

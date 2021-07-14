@@ -507,7 +507,6 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
-      - monitor
     links: 
       - rabbitmq
     environment:

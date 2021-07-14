@@ -32,5 +32,6 @@ class HeartbeatListener(Process):
 
             except:
                 logging.info(f"[HEARTBEAT_LISTENER] The id {self.id} has died :'(")
+                component_sock = self.socket.accept()
             
         component_sock.close()
