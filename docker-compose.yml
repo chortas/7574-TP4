@@ -26,6 +26,10 @@ services:
       - ID_FIELD=token
       - INTERFACE_IP=interface
       - INTERFACE_PORT=3001
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=filter_avg_rating_server_duration_1
 
   matches_broadcaster:
     container_name: matches_broadcaster
@@ -384,3 +388,16 @@ services:
       - INTERNAL_PORT=3001
     ports:
       - "3002:3002"
+
+  monitor:
+    container_name: monitor
+    image: monitor:latest
+    entrypoint: python3 /main.py
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    links: 
+      - rabbitmq
+    environment:
+      - INTERNAL_PORT=3003
+      - TIMEOUT=10

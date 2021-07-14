@@ -17,3 +17,7 @@ class ClientSocket(Socket):
             self.socket.connect(address)
         except:
             logging.info("Error connecting")
+
+    def set_timeout(self, timeout):
+        logging.info(f"timeout: {timeout}")
+        self.socket.settimeout(timeout)

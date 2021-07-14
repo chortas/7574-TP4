@@ -50,6 +50,8 @@ INTERNAL_PORT = 3001
 
 N_FINAL_NODES = N_FILTER_ARSD + N_FILTER_SOLO_WINNER_PLAYER + N_WINNER_RATE_CALCULATOR + N_TOP_CIV_CALCULATOR
 
+MONITOR_PORT = 3003
+
 def write_header_and_rabbit(compose_file):
     compose_file.write(HEADER_AND_RABBIT)
 
@@ -77,8 +79,11 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     env_variables = {"MATCH_QUEUE": "filter_arsd_queue", "OUTPUT_QUEUE": "output_queue_1", 
     "AVG_RATING_FIELD": "average_rating", "SERVER_FIELD": "server",
     "DURATION_FIELD": "duration", "ID_FIELD": "token",
-    "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT}
+    "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT,
+    "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT,
+    "FREQUENCY": 3}
     for i in range(1, N_FILTER_ARSD+1):
+      env_variables["ID"] = f"filter_avg_rating_server_duration_{i}"
       write_section(compose_file, f"filter_avg_rating_server_duration_{i}", "filter_avg_rating_server_duration", env_variables)
 
     # matches_broadcaster
@@ -199,3 +204,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     # interface
     env_variables = {"API_PORT": 3002, "SENTINEL_AMOUNT": N_FINAL_NODES, "INTERNAL_PORT": INTERNAL_PORT}
     write_section(compose_file, "interface", "interface", env_variables, export_port=env_variables['API_PORT'])
+
+    # monitor
+    env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10}
+    write_section(compose_file, "monitor", "monitor", env_variables)
