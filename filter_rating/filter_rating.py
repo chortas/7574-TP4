@@ -5,7 +5,7 @@ from common.utils import *
 
 class FilterRating():
     def __init__(self, player_queue, rating_field, match_field, civ_field, id_field,
-    join_exchange, join_routing_key):
+    join_exchange, join_routing_key, heartbeat_sender):
         self.player_queue = player_queue
         self.rating_field = rating_field
         self.match_field = match_field
@@ -13,6 +13,7 @@ class FilterRating():
         self.id_field = id_field
         self.join_exchange = join_exchange
         self.join_routing_key = join_routing_key
+        self.heartbeat_sender = heartbeat_sender
 
     def start(self):
         wait_for_rabbit()
@@ -22,6 +23,7 @@ class FilterRating():
         create_queue(channel, self.player_queue)
         create_exchange(channel, self.join_exchange, "direct")
 
+        self.heartbeat_sender.start()
         consume(channel, self.player_queue, self.__callback)
 
     def __callback(self, ch, method, properties, body):

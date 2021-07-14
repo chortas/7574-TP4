@@ -4,6 +4,7 @@ import os
 
 from interface import Interface
 from common.utils import *
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -25,7 +26,11 @@ def main():
 
     config_params = parse_config_params()
 
-    interface = Interface(config_params['api_port'], config_params['internal_port'], config_params["sentinel_amount"])
+    heartbeat_sender = HeartbeatSender()
+
+    interface = Interface(config_params['api_port'], config_params['internal_port'], 
+    config_params["sentinel_amount"], heartbeat_sender)
+    
     interface.start()
 
 def initialize_log():

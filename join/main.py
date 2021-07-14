@@ -3,6 +3,7 @@ import logging
 import os
 
 from join import Join
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -27,10 +28,13 @@ def main():
 
     config_params = parse_config_params()
 
+    heartbeat_sender = HeartbeatSender()
+    
     join = Join(config_params["match_token_exchange"], int(config_params["n_reducers"]),
     config_params["match_consumer_routing_key"], config_params["join_exchange"], 
     config_params["match_id_field"], config_params["player_consumer_routing_key"],
-    config_params["player_match_field"])
+    config_params["player_match_field"], heartbeat_sender)
+
     join.start()
 
 def initialize_log():

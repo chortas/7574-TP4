@@ -4,6 +4,7 @@ import os
 
 from top_civ_calculator import TopCivCalculator
 from common.interface_communicator import InterfaceCommunicator
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -24,11 +25,14 @@ def main():
     initialize_log()
 
     config_params = parse_config_params()
+    
     interface_communicator = InterfaceCommunicator()
+    heartbeat_sender = HeartbeatSender()
 
     top_civ_calculator = TopCivCalculator(config_params["grouped_players_queue"], 
     config_params["output_queue"], config_params["id_field"], 
-    int(config_params["sentinel_amount"]), interface_communicator)
+    int(config_params["sentinel_amount"]), interface_communicator, heartbeat_sender)
+
     top_civ_calculator.start()
 
 def initialize_log():

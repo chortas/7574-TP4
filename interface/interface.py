@@ -9,7 +9,7 @@ INITIAL_STATE = 'READY'
 from shared_value import SharedValue
 
 class Interface():
-    def __init__(self, api_port, internal_port, sentinels_amount):
+    def __init__(self, api_port, internal_port, sentinels_amount, heartbeat_sender):
         self.sentinels_amount = sentinels_amount
         self.state = SharedValue(INITIAL_STATE)
         self.internal_socket = ServerSocket('', internal_port, 1)
@@ -18,6 +18,8 @@ class Interface():
 
         self.node_listener = threading.Thread(target=self._start_listening_nodes)
         self.client_listener = threading.Thread(target=self._start_listening_clients)
+
+        self.heartbeat_sender = heartbeat_sender
     
     def _start_listening_nodes(self):
         while True:
@@ -60,8 +62,7 @@ class Interface():
             client_sock.close()
         
     def start(self):
+        self.heartbeat_sender.start()
         self.node_listener.start()
         self.client_listener.start()
-
-        
         

@@ -30,10 +30,12 @@ def main():
 
     interface_communicator = InterfaceCommunicator()
     heartbeat_sender = HeartbeatSender()
+
     filter_arsd = FilterAvgRatingServerDuration(config_params["match_queue"], 
     config_params["output_queue"], config_params["avg_rating_field"], 
     config_params["server_field"], config_params["duration_field"], config_params["id_field"], 
     interface_communicator, heartbeat_sender)
+    
     filter_arsd.start()
 
 def initialize_log():

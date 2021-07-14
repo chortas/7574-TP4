@@ -5,7 +5,8 @@ from common.utils import *
 
 class FilterLadderMapMirror():
     def __init__(self, match_queue, match_token_exchange, top_civ_routing_key, 
-    rate_winner_routing_key, ladder_field, map_field, mirror_field, id_field):
+    rate_winner_routing_key, ladder_field, map_field, mirror_field, id_field,
+    heartbeat_sender):
         self.match_queue = match_queue
         self.match_token_exchange = match_token_exchange
         self.top_civ_routing_key = top_civ_routing_key
@@ -14,6 +15,7 @@ class FilterLadderMapMirror():
         self.map_field = map_field
         self.mirror_field = mirror_field
         self.id_field = id_field
+        self.heartbeat_sender = heartbeat_sender
 
     def start(self):
         wait_for_rabbit()
@@ -23,6 +25,7 @@ class FilterLadderMapMirror():
         create_queue(channel, self.match_queue)
         create_exchange(channel, self.match_token_exchange, "direct")
 
+        self.heartbeat_sender.start()
         consume(channel, self.match_queue, self.__callback)
 
     def __callback(self, ch, method, properties, body):

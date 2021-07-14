@@ -15,6 +15,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -38,11 +39,16 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
       - ROW_QUEUE=match_queue
       - QUEUES_TO_SEND=filter_arsd_queue,filter_lmm_queue
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=matches_broadcaster
 
   group_by_match:
     container_name: group_by_match
@@ -51,6 +57,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -58,6 +65,10 @@ services:
       - N_REDUCERS=2
       - GROUP_BY_QUEUE=group_by_match_queue
       - GROUP_BY_FIELD=match
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=group_by_match
 
   reducer_group_by_match_1:
     container_name: reducer_group_by_match_1
@@ -66,6 +77,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -73,6 +85,10 @@ services:
       - GROUP_BY_FIELD=match
       - GROUPED_PLAYERS_QUEUE=grouped_players_queue_filter_swp
       - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_group_by_match_1
 
   reducer_group_by_match_2:
     container_name: reducer_group_by_match_2
@@ -81,6 +97,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -88,6 +105,10 @@ services:
       - GROUP_BY_FIELD=match
       - GROUPED_PLAYERS_QUEUE=grouped_players_queue_filter_swp
       - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_group_by_match_2
 
   filter_solo_winner_player_1:
     container_name: filter_solo_winner_player_1
@@ -96,6 +117,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -105,6 +127,10 @@ services:
       - WINNER_FIELD=winner
       - INTERFACE_IP=interface
       - INTERFACE_PORT=3001
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=filter_solo_winner_player_2
 
   filter_ladder_map_mirror:
     container_name: filter_ladder_map_mirror
@@ -113,6 +139,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -124,6 +151,10 @@ services:
       - MAP_FIELD=map
       - MIRROR_FIELD=mirror
       - ID_FIELD=token
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=filter_ladder_map_mirror
 
   players_broadcaster:
     container_name: players_broadcaster
@@ -132,11 +163,16 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
       - ROW_QUEUE=player_queue
       - QUEUES_TO_SEND=player_cleaner_queue,filter_rating_queue,group_by_player_queue
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=players_broadcaster
 
   players_cleaner:
     container_name: players_cleaner
@@ -145,6 +181,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -154,6 +191,10 @@ services:
       - WINNER_FIELD=winner
       - JOIN_EXCHANGE=match_token_exchange
       - JOIN_ROUTING_KEY=player_rate_winner_routing_key
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=players_cleaner
 
   filter_rating:
     container_name: filter_rating
@@ -162,6 +203,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -172,6 +214,10 @@ services:
       - ID_FIELD=token
       - JOIN_EXCHANGE=match_token_exchange
       - JOIN_ROUTING_KEY=player_top_civ_routing_key
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=filter_rating
 
   join_rate_winner:
     container_name: join_rate_winner
@@ -180,6 +226,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -190,6 +237,10 @@ services:
       - MATCH_ID_FIELD=token
       - PLAYER_CONSUMER_ROUTING_KEY=player_rate_winner_routing_key
       - PLAYER_MATCH_FIELD=match
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=join_rate_winner
 
   join_top_civ:
     container_name: join_top_civ
@@ -198,6 +249,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -208,6 +260,10 @@ services:
       - MATCH_ID_FIELD=token
       - PLAYER_CONSUMER_ROUTING_KEY=player_top_civ_routing_key
       - PLAYER_MATCH_FIELD=match
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=join_top_civ
 
   reducer_rate_winner_join_1:
     container_name: reducer_rate_winner_join_1
@@ -216,6 +272,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -226,6 +283,10 @@ services:
       - MATCH_ID_FIELD=token
       - PLAYER_MATCH_FIELD=match
       - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_rate_winner_join_1
 
   reducer_top_civ_join_1:
     container_name: reducer_top_civ_join_1
@@ -234,6 +295,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -244,6 +306,10 @@ services:
       - MATCH_ID_FIELD=token
       - PLAYER_MATCH_FIELD=match
       - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_top_civ_join_1
 
   group_by_civ_rate_winner:
     container_name: group_by_civ_rate_winner
@@ -252,6 +318,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -259,6 +326,10 @@ services:
       - N_REDUCERS=2
       - GROUP_BY_QUEUE=group_by_civ_rate_winner_queue
       - GROUP_BY_FIELD=civ
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=group_by_civ_rate_winner
 
   reducer_group_by_civ_rate_winner_1:
     container_name: reducer_group_by_civ_rate_winner_1
@@ -267,6 +338,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -275,6 +347,10 @@ services:
       - GROUPED_PLAYERS_QUEUE=winner_rate_calculator_queue
       - SENTINEL_AMOUNT=1
       - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_group_by_civ_rate_winner_1
 
   reducer_group_by_civ_rate_winner_2:
     container_name: reducer_group_by_civ_rate_winner_2
@@ -283,6 +359,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -291,6 +368,10 @@ services:
       - GROUPED_PLAYERS_QUEUE=winner_rate_calculator_queue
       - SENTINEL_AMOUNT=1
       - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_group_by_civ_rate_winner_2
 
   group_by_civ_top_civ:
     container_name: group_by_civ_top_civ
@@ -299,6 +380,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -306,6 +388,10 @@ services:
       - N_REDUCERS=2
       - GROUP_BY_QUEUE=group_by_civ_top_civ_queue
       - GROUP_BY_FIELD=civ
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=group_by_civ_top_civ
 
   reducer_group_by_civ_top_civ_1:
     container_name: reducer_group_by_civ_top_civ_1
@@ -314,6 +400,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -322,6 +409,10 @@ services:
       - GROUPED_PLAYERS_QUEUE=top_civ_calculator_queue
       - SENTINEL_AMOUNT=1
       - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_group_by_civ_top_civ_1
 
   reducer_group_by_civ_top_civ_2:
     container_name: reducer_group_by_civ_top_civ_2
@@ -330,6 +421,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -338,6 +430,10 @@ services:
       - GROUPED_PLAYERS_QUEUE=top_civ_calculator_queue
       - SENTINEL_AMOUNT=1
       - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_group_by_civ_top_civ_2
 
   winner_rate_calculator_1:
     container_name: winner_rate_calculator_1
@@ -346,6 +442,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -355,6 +452,10 @@ services:
       - SENTINEL_AMOUNT=2
       - INTERFACE_IP=interface
       - INTERFACE_PORT=3001
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=winner_rate_calculator_1
 
   top_civ_calculator_1:
     container_name: top_civ_calculator_1
@@ -363,6 +464,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
@@ -372,6 +474,10 @@ services:
       - SENTINEL_AMOUNT=2
       - INTERFACE_IP=interface
       - INTERFACE_PORT=3001
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=top_civ_calculator_1
 
   interface:
     container_name: interface
@@ -380,12 +486,17 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:
       - API_PORT=3002
       - SENTINEL_AMOUNT=4
       - INTERNAL_PORT=3001
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=interface
     ports:
       - "3002:3002"
 
@@ -396,6 +507,7 @@ services:
     restart: on-failure
     depends_on:
       - rabbitmq
+      - monitor
     links: 
       - rabbitmq
     environment:

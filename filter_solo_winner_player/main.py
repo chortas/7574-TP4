@@ -4,6 +4,7 @@ import os
 
 from filter_solo_winner_player import FilterSoloWinnerPlayer
 from common.interface_communicator import InterfaceCommunicator
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -24,10 +25,14 @@ def main():
     initialize_log()
 
     config_params = parse_config_params()
+
     interface_communicator = InterfaceCommunicator()
+    heartbeat_sender = HeartbeatSender()
 
     filter_swp = FilterSoloWinnerPlayer(config_params["grouped_players_queue"], 
-    config_params["output_queue"], config_params["rating_field"], config_params["winner_field"], interface_communicator)
+    config_params["output_queue"], config_params["rating_field"], 
+    config_params["winner_field"], interface_communicator, heartbeat_sender)
+    
     filter_swp.start()
 
 def initialize_log():

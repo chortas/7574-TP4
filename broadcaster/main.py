@@ -3,6 +3,7 @@ import logging
 import os
 
 from broadcaster import Broadcaster
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -22,7 +23,11 @@ def main():
 
     config_params = parse_config_params()
 
-    broadcaster = Broadcaster(config_params["row_queue"], config_params["queues_to_send"])
+    heartbeat_sender = HeartbeatSender()
+
+    broadcaster = Broadcaster(config_params["row_queue"], config_params["queues_to_send"],
+    heartbeat_sender)
+    
     broadcaster.start()
 
 def initialize_log():

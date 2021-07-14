@@ -4,8 +4,8 @@ import json
 from common.utils import *
 
 class ReducerGroupBy():
-    def __init__(self, group_by_queue, group_by_field, grouped_players_queue, sentinel_amount,
-    batch_to_send):
+    def __init__(self, group_by_queue, group_by_field, grouped_players_queue, 
+    sentinel_amount, batch_to_send, heartbeat_sender):
         self.group_by_queue = group_by_queue
         self.group_by_field = group_by_field
         self.grouped_players_queue = grouped_players_queue
@@ -13,6 +13,7 @@ class ReducerGroupBy():
         self.sentinel_amount = sentinel_amount
         self.act_sentinel = sentinel_amount
         self.batch_to_send = batch_to_send
+        self.heartbeat_sender = heartbeat_sender
 
     def start(self):
         wait_for_rabbit()
@@ -22,6 +23,7 @@ class ReducerGroupBy():
         create_queue(channel, self.group_by_queue)
         create_queue(channel, self.grouped_players_queue)
 
+        self.heartbeat_sender.start()
         consume(channel, self.group_by_queue, self.__callback)
 
     def __callback(self, ch, method, properties, body):

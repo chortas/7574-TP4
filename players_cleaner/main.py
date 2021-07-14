@@ -3,6 +3,7 @@ import logging
 import os
 
 from players_cleaner import PlayersCleaner
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -26,9 +27,12 @@ def main():
 
     config_params = parse_config_params()
 
+    heartbeat_sender = HeartbeatSender()
+
     players_cleaner = PlayersCleaner(config_params["player_queue"],
     config_params["match_field"], config_params["civ_field"], config_params["winner_field"],
-    config_params["join_exchange"], config_params["join_routing_key"])
+    config_params["join_exchange"], config_params["join_routing_key"], heartbeat_sender)
+
     players_cleaner.start()
 
 def initialize_log():

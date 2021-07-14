@@ -4,9 +4,10 @@ import json
 from common.utils import *
 
 class Broadcaster():
-    def __init__(self, row_queue, queues_to_send):
+    def __init__(self, row_queue, queues_to_send, heartbeat_sender):
         self.row_queue = row_queue
         self.queues_to_send = queues_to_send
+        self.heartbeat_sender = heartbeat_sender
 
     def start(self):
         wait_for_rabbit()
@@ -17,6 +18,7 @@ class Broadcaster():
         for queue in self.queues_to_send:
             create_queue(channel, queue)
 
+        self.heartbeat_sender.start()
         consume(channel, self.row_queue, self.__callback)
 
     def __callback(self, ch, method, properties, body):

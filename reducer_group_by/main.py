@@ -3,6 +3,7 @@ import logging
 import os
 
 from reducer_group_by import ReducerGroupBy
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -27,9 +28,12 @@ def main():
 
     config_params = parse_config_params()
 
+    heartbeat_sender = HeartbeatSender()
+
     reducer_group_by = ReducerGroupBy(config_params["group_by_queue"],
     config_params["group_by_field"], config_params["grouped_players_queue"], 
-    int(config_params["sentinel_amount"]), int(config_params["batch_to_send"]))
+    int(config_params["sentinel_amount"]), int(config_params["batch_to_send"]), heartbeat_sender)
+
     reducer_group_by.start()
 
 def initialize_log():

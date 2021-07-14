@@ -23,6 +23,7 @@ def main():
     config_params = parse_config_params()
 
     monitor = Monitor(int(config_params["internal_port"]), int(config_params["timeout"]))
+    
     monitor.start()
 
 def initialize_log():

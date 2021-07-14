@@ -3,6 +3,7 @@ import logging
 import os
 
 from filter_rating import FilterRating
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -27,9 +28,12 @@ def main():
 
     config_params = parse_config_params()
 
+    heartbeat_sender = HeartbeatSender()
+
     filter_rating = FilterRating(config_params["player_queue"], config_params["rating_field"], 
     config_params["match_field"], config_params["civ_field"], config_params["id_field"],
-    config_params["join_exchange"], config_params["join_routing_key"])
+    config_params["join_exchange"], config_params["join_routing_key"], heartbeat_sender)
+    
     filter_rating.start()
 
 def initialize_log():

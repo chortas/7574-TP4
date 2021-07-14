@@ -3,6 +3,7 @@ import logging
 import os
 
 from filter_ladder_map_mirror import FilterLadderMapMirror
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -28,10 +29,14 @@ def main():
 
     config_params = parse_config_params()
 
+    heartbeat_sender = HeartbeatSender()
+
     filter_lmm = FilterLadderMapMirror(config_params["match_queue"], 
     config_params["match_token_exchange"], config_params["top_civ_routing_key"], 
     config_params["rate_winner_routing_key"], config_params["ladder_field"], 
-    config_params["map_field"], config_params["mirror_field"], config_params["id_field"]) 
+    config_params["map_field"], config_params["mirror_field"], config_params["id_field"],
+    heartbeat_sender) 
+    
     filter_lmm.start()
 
 def initialize_log():
