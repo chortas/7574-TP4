@@ -30,7 +30,7 @@ class WinnerRateCalculator():
     def __init_state(self, id):
         self.state_handler = StateHandler(id)
         state = self.state_handler.get_state()
-        if "act_sentinel" in state:
+        if len(state) != 0:
             logging.info("[WINNER RATE CALCULATOR] Found state {}".format(state))
             self.act_sentinel = state["act_sentinel"]
         else:
