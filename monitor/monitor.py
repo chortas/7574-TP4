@@ -24,18 +24,16 @@ class Monitor():
             logging.info(f"[MONITOR] Id: {node_id}")
 
             if node_id not in self.nodes:
-                logging.info("Entre al if")
+                logging.info("[MONITOR] Id not registered")
                 self.nodes[node_id] = self.port
                 heartbeat_listener = HeartbeatListener(self.port, node_id, self.timeout)
                 self.internal_socket.send_to(component_sock, json.dumps({"port": self.port}))
-                logging.info("Pre start")
                 heartbeat_listener.start()
-                logging.info("Post start")
                 self.heartbeat_listeners.append(heartbeat_listener)               
                 self.port += 1 
                 
             else:
-                logging.info("Entre al else")
+                logging.info("[MONITOR] Id already registered")
                 self.internal_socket.send_to(component_sock, json.dumps({"port": self.nodes[node_id]}))
 
             component_sock.close()
