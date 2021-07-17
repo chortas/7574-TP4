@@ -12,7 +12,7 @@ class ServerSocket(Socket):
         self.socket.bind((host, port))
         self.socket.listen(listen_backlog)
         
-    def accept(self):
+    def accept(self, timeout=None):
         """
         Accept new connections
 
@@ -20,6 +20,8 @@ class ServerSocket(Socket):
         Then connection created is printed and returned
         """
         try:
+            if timeout:
+                self.socket.settimeout(timeout)
             # Connection arrived
             c, addr = self.socket.accept()
             logging.info('Got connection from {}'.format(addr))

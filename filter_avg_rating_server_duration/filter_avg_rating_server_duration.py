@@ -33,6 +33,7 @@ class FilterAvgRatingServerDuration():
         if len(matches) == 0:
             logging.info("[FILTER_AVG_RATING_SERVER_DURATION] The client already sent all messages")
             self.interface_communicator.send_finish_message()
+            ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         for match in matches:
             if self.__meets_the_condition(match):

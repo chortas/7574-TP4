@@ -8,6 +8,21 @@ services:
       - 15672:15672
       - 5672:5672
 
+  monitor:
+    container_name: monitor
+    image: monitor:latest
+    entrypoint: python3 /main.py
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock
+    links: 
+      - rabbitmq
+    environment:
+      - INTERNAL_PORT=3003
+      - TIMEOUT=10
+
   filter_avg_rating_server_duration_1:
     container_name: filter_avg_rating_server_duration_1
     image: filter_avg_rating_server_duration:latest
@@ -499,18 +514,3 @@ services:
       - ID=interface
     ports:
       - "3002:3002"
-
-  monitor:
-    container_name: monitor
-    image: monitor:latest
-    entrypoint: python3 /main.py
-    restart: on-failure
-    depends_on:
-      - rabbitmq
-    volumes: 
-      - /var/run/docker.sock:/var/run/docker.sock
-    links: 
-      - rabbitmq
-    environment:
-      - INTERNAL_PORT=3003
-      - TIMEOUT=10
