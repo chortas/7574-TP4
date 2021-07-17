@@ -36,8 +36,8 @@ def create_and_bind_anonymous_queue(channel, exchange_name, routing_keys=[]):
 
     return queue_name
 
-def consume(channel, queue_name, callback):
+def consume(channel, queue_name, callback, auto_ack=True):
     logging.info('Waiting for messages. To exit press CTRL+C')
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
+    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=auto_ack)
     channel.start_consuming()

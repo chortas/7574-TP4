@@ -26,7 +26,7 @@ class FilterAvgRatingServerDuration():
         create_queue(channel, self.output_queue)
 
         self.heartbeat_sender.start()
-        consume(channel, self.match_queue, self.__callback)
+        consume(channel, self.match_queue, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         matches = json.loads(body)
@@ -37,6 +37,7 @@ class FilterAvgRatingServerDuration():
         for match in matches:
             if self.__meets_the_condition(match):
                 send_message(ch, match[self.id_field], queue_name=self.output_queue)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
            
     def __meets_the_condition(self, match):
         if len(match) == 0:
