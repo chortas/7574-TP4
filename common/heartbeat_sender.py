@@ -8,11 +8,11 @@ from multiprocessing import Process
 from time import sleep
 
 class HeartbeatSender(Process):
-    def __init__(self):
+    def __init__(self, node_id = None):
         Process.__init__(self)
         self.host = os.environ["MONITOR_IP"]
         self.monitor_port = int(os.environ["MONITOR_PORT"])
-        self.id = os.environ["ID"]
+        self.id = node_id if node_id else os.environ["ID"]
         self.frequency = int(os.environ["FREQUENCY"])
 
     def run(self):
