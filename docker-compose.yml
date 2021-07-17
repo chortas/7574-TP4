@@ -247,7 +247,7 @@ services:
       - rabbitmq
     environment:
       - MATCH_TOKEN_EXCHANGE=match_token_exchange
-      - N_REDUCERS=1
+      - N_REDUCERS=2
       - MATCH_CONSUMER_ROUTING_KEY=rate_winner_routing_key
       - JOIN_EXCHANGE=join_rate_winner
       - MATCH_ID_FIELD=token
@@ -270,7 +270,7 @@ services:
       - rabbitmq
     environment:
       - MATCH_TOKEN_EXCHANGE=match_token_exchange
-      - N_REDUCERS=1
+      - N_REDUCERS=2
       - MATCH_CONSUMER_ROUTING_KEY=top_civ_routing_key
       - JOIN_EXCHANGE=join_top_civ
       - MATCH_ID_FIELD=token
@@ -304,6 +304,29 @@ services:
       - FREQUENCY=3
       - ID=reducer_rate_winner_join_1
 
+  reducer_rate_winner_join_2:
+    container_name: reducer_rate_winner_join_2
+    image: reducer_join:latest
+    entrypoint: python3 /main.py
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - monitor
+    links: 
+      - rabbitmq
+    environment:
+      - JOIN_EXCHANGE=join_rate_winner_2
+      - MATCH_CONSUMER_ROUTING_KEY=rate_winner_routing_key
+      - PLAYER_CONSUMER_ROUTING_KEY=player_rate_winner_routing_key
+      - GROUPED_RESULT_QUEUE=grouped_rate_winner_queue
+      - MATCH_ID_FIELD=token
+      - PLAYER_MATCH_FIELD=match
+      - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_rate_winner_join_2
+
   reducer_top_civ_join_1:
     container_name: reducer_top_civ_join_1
     image: reducer_join:latest
@@ -326,6 +349,29 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_top_civ_join_1
+
+  reducer_top_civ_join_2:
+    container_name: reducer_top_civ_join_2
+    image: reducer_join:latest
+    entrypoint: python3 /main.py
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - monitor
+    links: 
+      - rabbitmq
+    environment:
+      - JOIN_EXCHANGE=join_top_civ_2
+      - MATCH_CONSUMER_ROUTING_KEY=top_civ_routing_key
+      - PLAYER_CONSUMER_ROUTING_KEY=player_top_civ_routing_key
+      - GROUPED_RESULT_QUEUE=grouped_top_civ_queue
+      - MATCH_ID_FIELD=token
+      - PLAYER_MATCH_FIELD=match
+      - BATCH_TO_SEND=1000
+      - MONITOR_IP=monitor
+      - MONITOR_PORT=3003
+      - FREQUENCY=3
+      - ID=reducer_top_civ_join_2
 
   group_by_civ_rate_winner:
     container_name: group_by_civ_rate_winner
@@ -361,7 +407,7 @@ services:
       - GROUP_BY_QUEUE=group_by_civ_rate_winner_queue_1
       - GROUP_BY_FIELD=civ
       - GROUPED_PLAYERS_QUEUE=winner_rate_calculator_queue
-      - SENTINEL_AMOUNT=1
+      - SENTINEL_AMOUNT=2
       - BATCH_TO_SEND=1000
       - MONITOR_IP=monitor
       - MONITOR_PORT=3003
@@ -382,7 +428,7 @@ services:
       - GROUP_BY_QUEUE=group_by_civ_rate_winner_queue_2
       - GROUP_BY_FIELD=civ
       - GROUPED_PLAYERS_QUEUE=winner_rate_calculator_queue
-      - SENTINEL_AMOUNT=1
+      - SENTINEL_AMOUNT=2
       - BATCH_TO_SEND=1000
       - MONITOR_IP=monitor
       - MONITOR_PORT=3003
@@ -423,7 +469,7 @@ services:
       - GROUP_BY_QUEUE=group_by_civ_top_civ_queue_1
       - GROUP_BY_FIELD=civ
       - GROUPED_PLAYERS_QUEUE=top_civ_calculator_queue
-      - SENTINEL_AMOUNT=1
+      - SENTINEL_AMOUNT=2
       - BATCH_TO_SEND=1000
       - MONITOR_IP=monitor
       - MONITOR_PORT=3003
@@ -444,7 +490,7 @@ services:
       - GROUP_BY_QUEUE=group_by_civ_top_civ_queue_2
       - GROUP_BY_FIELD=civ
       - GROUPED_PLAYERS_QUEUE=top_civ_calculator_queue
-      - SENTINEL_AMOUNT=1
+      - SENTINEL_AMOUNT=2
       - BATCH_TO_SEND=1000
       - MONITOR_IP=monitor
       - MONITOR_PORT=3003

@@ -19,6 +19,7 @@ class Join():
         self.heartbeat_sender = heartbeat_sender
 
     def start(self):
+        self.heartbeat_sender.start()
         wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
@@ -30,7 +31,6 @@ class Join():
         for reducer_exchange in self.reducer_exchanges:
             create_exchange(channel, reducer_exchange, "direct")
 
-        self.heartbeat_sender.start()
         consume(channel, queue_name, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):

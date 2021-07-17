@@ -14,6 +14,7 @@ class StateHandler:
         logging.info("[STATE HANDLER] Saving state")
         with open(self.path, "w") as file:
             json.dump(state, file)
+        logging.info("[STATE HANDLER] State saved")
 
     def get_state(self):
         logging.info("[STATE HANDLER] Geting state")

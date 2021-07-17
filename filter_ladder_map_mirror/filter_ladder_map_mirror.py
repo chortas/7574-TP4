@@ -18,6 +18,7 @@ class FilterLadderMapMirror():
         self.heartbeat_sender = heartbeat_sender
 
     def start(self):
+        self.heartbeat_sender.start()
         wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
@@ -25,7 +26,7 @@ class FilterLadderMapMirror():
         create_queue(channel, self.match_queue)
         create_exchange(channel, self.match_token_exchange, "direct")
 
-        self.heartbeat_sender.start()
+        
         consume(channel, self.match_queue, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):

@@ -10,6 +10,7 @@ class Broadcaster():
         self.heartbeat_sender = heartbeat_sender
 
     def start(self):
+        self.heartbeat_sender.start()
         wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
@@ -18,7 +19,6 @@ class Broadcaster():
         for queue in self.queues_to_send:
             create_queue(channel, queue)
 
-        self.heartbeat_sender.start()
         consume(channel, self.row_queue, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):

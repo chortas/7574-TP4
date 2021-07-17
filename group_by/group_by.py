@@ -15,6 +15,7 @@ class GroupBy():
         self.heartbeat_sender = heartbeat_sender
     
     def start(self):
+        self.heartbeat_sender.start()
         wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
@@ -24,7 +25,6 @@ class GroupBy():
         for reducer_queue in self.reducer_queues:
             create_queue(channel, reducer_queue)
 
-        self.heartbeat_sender.start()
         consume(channel, self.queue_name, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
