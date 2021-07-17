@@ -25,15 +25,17 @@ class PlayersCleaner():
         create_exchange(channel, self.join_exchange, "direct")
 
         self.heartbeat_sender.start()
-        consume(channel, self.player_queue, self.__callback)
+        consume(channel, self.player_queue, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         players = json.loads(body)
         if len(players) == 0:
             self.__handle_end_cleaner(ch, body)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
         new_players = self.__get_new_players(players)
         send_message(ch, json.dumps(new_players), queue_name=self.join_routing_key, exchange_name=self.join_exchange)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def __handle_end_cleaner(self, ch, body):
         logging.info("[PLAYERS_CLEANER] The client already sent all messages")

@@ -19,10 +19,11 @@ class Broadcaster():
             create_queue(channel, queue)
 
         self.heartbeat_sender.start()
-        consume(channel, self.row_queue, self.__callback)
+        consume(channel, self.row_queue, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         logging.info(f"Received {len(json.loads(body))} from client")
 
         for queue in self.queues_to_send:
             send_message(ch, body, queue_name=queue)
+        ch.basic_ack(delivery_tag=method.delivery_tag)

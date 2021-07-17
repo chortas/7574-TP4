@@ -24,17 +24,19 @@ class FilterRating():
         create_exchange(channel, self.join_exchange, "direct")
 
         self.heartbeat_sender.start()
-        consume(channel, self.player_queue, self.__callback)
+        consume(channel, self.player_queue, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         players = json.loads(body)
         if len(players) == 0:
             logging.info("[FILTER_RATING] The client already sent all messages")
             send_message(ch, body, queue_name=self.join_routing_key, exchange_name=self.join_exchange)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
             return
 
         message = self.__get_message(players)
         send_message(ch, json.dumps(message), queue_name=self.join_routing_key, exchange_name=self.join_exchange)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def __get_message(self, players):
         message = []

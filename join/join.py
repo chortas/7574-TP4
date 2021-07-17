@@ -31,7 +31,7 @@ class Join():
             create_exchange(channel, reducer_exchange, "direct")
 
         self.heartbeat_sender.start()
-        consume(channel, queue_name, self.__callback)
+        consume(channel, queue_name, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         elements_parsed = json.loads(body) 
@@ -39,6 +39,7 @@ class Join():
             logging.info("[JOIN] The client already sent all messages")
             for reducer_exchange in self.reducer_exchanges:
                 send_message(ch, body, queue_name=method.routing_key, exchange_name=reducer_exchange)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
         message = self.__get_message(elements_parsed, method)
@@ -47,6 +48,7 @@ class Join():
             exchange_name = self.reducer_exchanges[reducer_id]
             send_message(ch, json.dumps(elements), queue_name=method.routing_key, 
             exchange_name=exchange_name)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def __get_message(self, elements_parsed, method):
         message = {}
