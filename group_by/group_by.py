@@ -6,11 +6,13 @@ from common.utils import *
 from hashlib import sha256
 
 class GroupBy():
-    def __init__(self, n_reducers, group_by_queue, group_by_field, queue_name):
+    def __init__(self, n_reducers, group_by_queue, group_by_field, queue_name,
+    heartbeat_sender):
         self.reducer_queues = [f"{group_by_queue}_{i}" for i in range(1, n_reducers+1)]
         self.n_reducers = n_reducers
         self.group_by_field = group_by_field
         self.queue_name = queue_name
+        self.heartbeat_sender = heartbeat_sender
     
     def start(self):
         wait_for_rabbit()
@@ -22,6 +24,7 @@ class GroupBy():
         for reducer_queue in self.reducer_queues:
             create_queue(channel, reducer_queue)
 
+        self.heartbeat_sender.start()
         consume(channel, self.queue_name, self.__callback)
 
     def __callback(self, ch, method, properties, body):

@@ -3,6 +3,7 @@ import logging
 import os
 
 from reducer_join import ReducerJoin
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -27,10 +28,13 @@ def main():
 
     config_params = parse_config_params()
 
+    heartbeat_sender = HeartbeatSender()
+
     reducer_join = ReducerJoin(config_params["join_exchange"], 
     config_params["match_consumer_routing_key"],config_params["player_consumer_routing_key"],
     config_params["grouped_result_queue"], config_params["match_id_field"],
-    config_params["player_match_field"], int(config_params["batch_to_send"]))
+    config_params["player_match_field"], int(config_params["batch_to_send"]), heartbeat_sender)
+
     reducer_join.start()
 
 def initialize_log():

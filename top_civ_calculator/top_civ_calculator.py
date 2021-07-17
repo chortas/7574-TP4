@@ -5,7 +5,8 @@ from common.utils import *
 from collections import Counter
 
 class TopCivCalculator():
-    def __init__(self, grouped_players_queue, output_queue, id_field, sentinel_amount, interface_communicator):
+    def __init__(self, grouped_players_queue, output_queue, id_field, sentinel_amount, 
+    interface_communicator, heartbeat_sender):
         self.grouped_players_queue = grouped_players_queue
         self.output_queue = output_queue
         self.id_field = id_field
@@ -13,6 +14,7 @@ class TopCivCalculator():
         self.act_sentinel = sentinel_amount
         self.civilizations = {}
         self.interface_communicator = interface_communicator
+        self.heartbeat_sender = heartbeat_sender
     
     def start(self):
         wait_for_rabbit()
@@ -22,6 +24,7 @@ class TopCivCalculator():
         create_queue(channel, self.grouped_players_queue)
         create_queue(channel, self.output_queue)
 
+        self.heartbeat_sender.start()
         consume(channel, self.grouped_players_queue, self.__callback)
 
     def __callback(self, ch, method, properties, body):

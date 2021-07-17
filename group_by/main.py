@@ -4,6 +4,7 @@ import os
 
 from group_by import GroupBy
 from common.utils import *
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -25,8 +26,11 @@ def main():
 
     config_params = parse_config_params()
 
+    heartbeat_sender = HeartbeatSender()
+
     group_by = GroupBy(int(config_params["n_reducers"]), config_params["group_by_queue"], 
-    config_params["group_by_field"], config_params["queue_name"])
+    config_params["group_by_field"], config_params["queue_name"], heartbeat_sender)
+    
     group_by.start()
 
 def initialize_log():

@@ -7,7 +7,7 @@ from common.utils import *
 
 class FilterAvgRatingServerDuration():
     def __init__(self, match_queue, output_queue, avg_rating_field, server_field, 
-    duration_field, id_field, interface_communicator):
+    duration_field, id_field, interface_communicator, heartbeat_sender):
         self.match_queue = match_queue
         self.output_queue = output_queue
         self.avg_rating_field = avg_rating_field
@@ -15,6 +15,7 @@ class FilterAvgRatingServerDuration():
         self.duration_field = duration_field
         self.id_field = id_field
         self.interface_communicator = interface_communicator
+        self.heartbeat_sender = heartbeat_sender
 
     def start(self):
         wait_for_rabbit()
@@ -24,6 +25,7 @@ class FilterAvgRatingServerDuration():
         create_queue(channel, self.match_queue)
         create_queue(channel, self.output_queue)
 
+        self.heartbeat_sender.start()
         consume(channel, self.match_queue, self.__callback)
 
     def __callback(self, ch, method, properties, body):

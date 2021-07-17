@@ -4,8 +4,9 @@ import json
 from common.utils import *
 
 class ReducerJoin():
-    def __init__(self, join_exchange, match_consumer_routing_key, player_consumer_routing_key,
-    grouped_result_queue, match_id_field, player_match_field, batch_to_send):
+    def __init__(self, join_exchange, match_consumer_routing_key, 
+    player_consumer_routing_key, grouped_result_queue, match_id_field, 
+    player_match_field, batch_to_send, heartbeat_sender):
         self.join_exchange = join_exchange
         self.match_consumer_routing_key = match_consumer_routing_key
         self.player_consumer_routing_key = player_consumer_routing_key
@@ -17,6 +18,7 @@ class ReducerJoin():
         self.matches = set()
         self.players = set()
         self.len_join = 2 # to know when to stop
+        self.heartbeat_sender = heartbeat_sender
 
     def start(self):
         wait_for_rabbit()
@@ -29,6 +31,7 @@ class ReducerJoin():
 
         create_queue(channel, self.grouped_result_queue)
 
+        self.heartbeat_sender.start()
         consume(channel, queue_name, self.__callback)
 
     def __callback(self, ch, method, properties, body):

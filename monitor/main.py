@@ -2,18 +2,14 @@
 import logging
 import os
 
-from interface import Interface
-from common.utils import *
-from common.heartbeat_sender import HeartbeatSender
+from monitor import Monitor
 
 def parse_config_params():
     config_params = {}
     try:
-        config_params["api_port"] = int(os.environ["API_PORT"])
-        config_params["internal_port"] = int(os.environ["INTERNAL_PORT"])
-        config_params["sentinel_amount"] =  (int(os.environ["SENTINEL_AMOUNT"])
-                                            if "SENTINEL_AMOUNT" in os.environ
-                                            else 1) 
+        config_params["internal_port"] = os.environ["INTERNAL_PORT"]
+        config_params["timeout"] = os.environ["TIMEOUT"]
+    
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
     except ValueError as e:
@@ -26,12 +22,9 @@ def main():
 
     config_params = parse_config_params()
 
-    heartbeat_sender = HeartbeatSender()
-
-    interface = Interface(config_params['api_port'], config_params['internal_port'], 
-    config_params["sentinel_amount"], heartbeat_sender)
+    monitor = Monitor(int(config_params["internal_port"]), int(config_params["timeout"]))
     
-    interface.start()
+    monitor.start()
 
 def initialize_log():
     """

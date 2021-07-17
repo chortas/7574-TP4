@@ -7,7 +7,8 @@ from hashlib import sha256
 
 class Join():
     def __init__(self, match_token_exchange, n_reducers, match_consumer_routing_key, 
-    join_exchange, match_id_field, player_consumer_routing_key, player_match_field):
+    join_exchange, match_id_field, player_consumer_routing_key, player_match_field,
+    heartbeat_sender):
         self.match_token_exchange = match_token_exchange
         self.reducer_exchanges = [f"{join_exchange}_{i}" for i in range(1, n_reducers+1)]
         self.n_reducers = n_reducers
@@ -15,6 +16,7 @@ class Join():
         self.match_id_field = match_id_field
         self.player_consumer_routing_key = player_consumer_routing_key
         self.player_match_field = player_match_field
+        self.heartbeat_sender = heartbeat_sender
 
     def start(self):
         wait_for_rabbit()
@@ -28,6 +30,7 @@ class Join():
         for reducer_exchange in self.reducer_exchanges:
             create_exchange(channel, reducer_exchange, "direct")
 
+        self.heartbeat_sender.start()
         consume(channel, queue_name, self.__callback)
 
     def __callback(self, ch, method, properties, body):

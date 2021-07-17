@@ -7,13 +7,14 @@ from hashlib import sha256
 
 class PlayersCleaner():
     def __init__(self, player_queue, match_field, civ_field, winner_field, 
-    join_exchange, join_routing_key):
+    join_exchange, join_routing_key, heartbeat_sender):
         self.player_queue = player_queue
         self.match_field = match_field
         self.civ_field = civ_field
         self.winner_field = winner_field 
         self.join_exchange = join_exchange
         self.join_routing_key = join_routing_key
+        self.heartbeat_sender = heartbeat_sender
 
     def start(self):
         wait_for_rabbit()
@@ -23,6 +24,7 @@ class PlayersCleaner():
         create_queue(channel, self.player_queue)
         create_exchange(channel, self.join_exchange, "direct")
 
+        self.heartbeat_sender.start()
         consume(channel, self.player_queue, self.__callback)
 
     def __callback(self, ch, method, properties, body):

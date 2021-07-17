@@ -4,6 +4,7 @@ import os
 
 from winner_rate_calculator import WinnerRateCalculator
 from common.interface_communicator import InterfaceCommunicator
+from common.heartbeat_sender import HeartbeatSender
 
 def parse_config_params():
     config_params = {}
@@ -24,10 +25,14 @@ def main():
     initialize_log()
 
     config_params = parse_config_params()
+
     interface_communicator = InterfaceCommunicator()
+    heartbeat_sender = HeartbeatSender()
 
     winner_rate_calculator = WinnerRateCalculator(config_params["grouped_players_queue"], 
-    config_params["output_queue"], config_params["winner_field"], int(config_params["sentinel_amount"]), interface_communicator)
+    config_params["output_queue"], config_params["winner_field"], 
+    int(config_params["sentinel_amount"]), interface_communicator, heartbeat_sender)
+
     winner_rate_calculator.start()
 
 def initialize_log():

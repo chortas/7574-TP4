@@ -21,6 +21,7 @@ blockchain:
 .PHONY: blockchain
 
 docker-image:
+	docker build -f ./monitor/Dockerfile -t "monitor:latest" .
 	docker build -f ./filter_avg_rating_server_duration/Dockerfile -t "filter_avg_rating_server_duration:latest" .
 	docker build -f ./group_by/Dockerfile -t "group_by:latest" .
 	docker build -f ./reducer_group_by/Dockerfile -t "reducer_group_by:latest" .
@@ -41,6 +42,7 @@ docker-compose-up: docker-image
 .PHONY: docker-compose-up
 
 docker-compose-down:
+	docker stop monitor
 	docker-compose -f docker-compose.yml stop -t 1
 	docker-compose -f docker-compose.yml down
 .PHONY: docker-compose-down
