@@ -17,9 +17,13 @@ class StateHandler:
         logging.info("[STATE HANDLER] State saved")
 
     def get_state(self):
-        logging.info("[STATE HANDLER] Geting state")
-        if os.path.exists(self.path):
-            with open(self.path, "r") as file:
-                state = json.load(file)
-            return state
-        return {}
+        logging.info("[STATE HANDLER] Getting state")
+        try:
+            if os.path.exists(self.path):
+                with open(self.path, "r") as file:
+                    state = json.load(file)
+                return state
+            return {}
+        except:
+            logging.info("[STATE HANDLER] Error while getting state")
+            return {}

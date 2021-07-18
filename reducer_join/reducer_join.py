@@ -21,15 +21,17 @@ class ReducerJoin():
         self.__init_state(id)
 
     def __init_state(self, id):
+        logging.info("[REDUCER_JOIN] Init")
         self.state_handler = StateHandler(id)
         state = self.state_handler.get_state()
         if len(state) != 0:
-            logging.info("[REDUCER_JOIN] Found state")
+            logging.info("[REDUCER_JOIN] Found state {}".format(state))
             self.len_join = state["len_join"]
             self.matches_and_players = state["matches_and_players"]
             self.matches = set(state["matches"])
             self.players = set(state["players"])
         else:
+            logging.info("[REDUCER_JOIN] No state saved")
             self.matches_and_players = {}
             self.matches = set()
             self.players = set()
@@ -58,9 +60,11 @@ class ReducerJoin():
         elements = json.loads(body) 
         if len(elements) == 0:
             self.__handle_end_join(ch)
-        else:
-            for element in elements:
-                self.__store_matches_and_players(element, method)
+            self.__save_state()
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+        for element in elements:
+            self.__store_matches_and_players(element, method)
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
     
@@ -99,5 +103,7 @@ class ReducerJoin():
             send_message(ch, json.dumps(result), queue_name=self.grouped_result_queue)
         send_message(ch, json.dumps({}), queue_name=self.grouped_result_queue)
         self.matches_and_players = {}
+        self.matches = set()
+        self.players = set()
         self.len_join = LEN_JOIN
         
