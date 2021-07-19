@@ -10,6 +10,7 @@ class ReducerJoin():
     def __init__(self, id, join_exchange, match_consumer_routing_key, 
     player_consumer_routing_key, grouped_result_queue, match_id_field, 
     player_match_field, batch_to_send, heartbeat_sender):
+        logging.info("[REDUCER_JOIN] Init")
         self.join_exchange = join_exchange
         self.match_consumer_routing_key = match_consumer_routing_key
         self.player_consumer_routing_key = player_consumer_routing_key
@@ -43,29 +44,35 @@ class ReducerJoin():
         "matches": list(self.matches), "players": list(self.players)})
 
     def start(self):
+        logging.info("[REDUCER_JOIN] INICIANDO MANDO HEARTBEAT")
         self.heartbeat_sender.start()
+        logging.info("[REDUCER_JOIN] VOY A ESPERAR A RABBIT")
         wait_for_rabbit()
-
+        logging.info("[REDUCER_JOIN] VOY A CONECTARME CON RABBIT")
         connection, channel = create_connection_and_channel()
-
+        logging.info("[REDUCER_JOIN] CREE LA CONECCION")
         create_exchange(channel, self.join_exchange, exchange_type="direct")
         queue_name = create_and_bind_anonymous_queue(channel, self.join_exchange, 
         routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key])
-
+        logging.info("[REDUCER_JOIN] CREO LA COLAS")
         create_queue(channel, self.grouped_result_queue)
-
+        logging.info("[REDUCER_JOIN] voy a empezar a consumir")
         consume(channel, queue_name, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         elements = json.loads(body) 
         if len(elements) == 0:
+            logging.info("[REDUCER_JOIN] Received sentinel")
             self.__handle_end_join(ch)
             self.__save_state()
+            logging.info("[REDUCER_JOIN] Mando ACK DEL CENTINELA")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
+        logging.info("[REDUCER_JOIN] Received {}".format(elements))
         for element in elements:
             self.__store_matches_and_players(element, method)
         self.__save_state()
+        logging.info("[REDUCER_JOIN] Mando ACK DE LO JOINEADO")
         ch.basic_ack(delivery_tag=method.delivery_tag)
     
     def __handle_end_join(self, ch):

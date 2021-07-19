@@ -23,6 +23,7 @@ class ReducerGroupBy():
             self.act_sentinel = state["act_sentinel"]
             self.players_to_group = state["players_to_group"]
         else:
+            logging.info("[REDUCER_GROUP_BY] State not found")
             self.players_to_group = {}
             self.act_sentinel = self.sentinel_amount
             self.__save_state()
@@ -49,7 +50,7 @@ class ReducerGroupBy():
             self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
-        
+        logging.info("[REDUCER_GROUP_BY] Received {}".format(players))
         for player in players:
             group_by_element = player[self.group_by_field]
             self.players_to_group[group_by_element] = self.players_to_group.get(group_by_element, [])
