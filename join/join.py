@@ -25,8 +25,8 @@ class Join():
         connection, channel = create_connection_and_channel()
 
         create_exchange(channel, self.match_token_exchange, "direct")
-        queue_name = create_and_bind_anonymous_queue(channel, self.match_token_exchange, 
-        routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key])
+        queue_name = create_and_bind_queue(channel, self.match_token_exchange, 
+        routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key], queue_name=f"input_{self.match_token_exchange}")
 
         for reducer_exchange in self.reducer_exchanges:
             create_exchange(channel, reducer_exchange, "direct")

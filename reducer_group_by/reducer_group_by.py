@@ -7,6 +7,7 @@ from common.state_handler import StateHandler
 class ReducerGroupBy():
     def __init__(self, id, group_by_queue, group_by_field, grouped_players_queue, 
     sentinel_amount, batch_to_send, heartbeat_sender):
+        logging.info("[REDUCER_GROUP_BY] Init")
         self.group_by_queue = group_by_queue
         self.group_by_field = group_by_field
         self.grouped_players_queue = grouped_players_queue

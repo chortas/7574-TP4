@@ -33,7 +33,6 @@ class FilterRating():
             send_message(ch, body, queue_name=self.join_routing_key, exchange_name=self.join_exchange)
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
-
         message = self.__get_message(players)
         send_message(ch, json.dumps(message), queue_name=self.join_routing_key, exchange_name=self.join_exchange)
         ch.basic_ack(delivery_tag=method.delivery_tag)

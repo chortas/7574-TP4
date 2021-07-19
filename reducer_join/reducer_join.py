@@ -22,11 +22,11 @@ class ReducerJoin():
         self.__init_state(id)
 
     def __init_state(self, id):
-        logging.info("[REDUCER_JOIN] Init")
+        logging.info("[REDUCER_JOIN] Init State")
         self.state_handler = StateHandler(id)
         state = self.state_handler.get_state()
         if len(state) != 0:
-            logging.info("[REDUCER_JOIN] Found state {}".format(state))
+            logging.info("[REDUCER_JOIN] Found state")
             self.len_join = state["len_join"]
             self.matches_and_players = state["matches_and_players"]
             self.matches = set(state["matches"])
@@ -38,6 +38,7 @@ class ReducerJoin():
             self.players = set()
             self.len_join = LEN_JOIN # to know when to stop
             self.__save_state()
+            
 
     def __save_state(self):
         self.state_handler.update_state({"len_join": self.len_join, "matches_and_players": self.matches_and_players,
@@ -46,17 +47,12 @@ class ReducerJoin():
     def start(self):
         logging.info("[REDUCER_JOIN] INICIANDO MANDO HEARTBEAT")
         self.heartbeat_sender.start()
-        logging.info("[REDUCER_JOIN] VOY A ESPERAR A RABBIT")
         wait_for_rabbit()
-        logging.info("[REDUCER_JOIN] VOY A CONECTARME CON RABBIT")
         connection, channel = create_connection_and_channel()
-        logging.info("[REDUCER_JOIN] CREE LA CONECCION")
         create_exchange(channel, self.join_exchange, exchange_type="direct")
-        queue_name = create_and_bind_anonymous_queue(channel, self.join_exchange, 
-        routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key])
-        logging.info("[REDUCER_JOIN] CREO LA COLAS")
+        queue_name = create_and_bind_queue(channel, self.join_exchange, 
+            routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key], queue_name=f"input_{self.join_exchange}")
         create_queue(channel, self.grouped_result_queue)
-        logging.info("[REDUCER_JOIN] voy a empezar a consumir")
         consume(channel, queue_name, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
@@ -65,14 +61,12 @@ class ReducerJoin():
             logging.info("[REDUCER_JOIN] Received sentinel")
             self.__handle_end_join(ch)
             self.__save_state()
-            logging.info("[REDUCER_JOIN] Mando ACK DEL CENTINELA")
+            logging.info("[REDUCER_JOIN] Mando ACK DEL CENTINELA y me quedan {}".format(self.len_join))
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
-        logging.info("[REDUCER_JOIN] Received {}".format(elements))
         for element in elements:
             self.__store_matches_and_players(element, method)
         self.__save_state()
-        logging.info("[REDUCER_JOIN] Mando ACK DE LO JOINEADO")
         ch.basic_ack(delivery_tag=method.delivery_tag)
     
     def __handle_end_join(self, ch):

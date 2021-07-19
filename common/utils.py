@@ -16,7 +16,7 @@ def create_queue(channel, queue_name):
     channel.queue_declare(queue=queue_name, durable=True)
 
 def create_exchange(channel, exchange_name, exchange_type):
-    channel.exchange_declare(exchange=exchange_name, exchange_type=exchange_type)
+    channel.exchange_declare(exchange=exchange_name, exchange_type=exchange_type, durable=True)
 
 def send_message(channel, body, queue_name='', exchange_name=''):
     channel.basic_publish(exchange=exchange_name, routing_key=queue_name, body=body,
@@ -24,16 +24,18 @@ def send_message(channel, body, queue_name='', exchange_name=''):
         delivery_mode=2,  # make message persistent
     ))
 
-def create_and_bind_anonymous_queue(channel, exchange_name, routing_keys=[]):
-    result = channel.queue_declare(queue='', durable=True)
-    queue_name = result.method.queue
+def create_and_bind_queue(channel, exchange_name, routing_keys=[], queue_name=''):
+    if queue_name:
+        channel.queue_declare(queue=queue_name, durable=True)
+    else:
+        result = channel.queue_declare(queue='', durable=True)
+        queue_name = result.method.queue
 
     if len(routing_keys) == 0:
         channel.queue_bind(exchange=exchange_name, queue=queue_name)
 
     for routing_key in routing_keys:
         channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=routing_key)
-
     return queue_name
 
 def consume(channel, queue_name, callback, auto_ack=True):

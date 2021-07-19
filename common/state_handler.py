@@ -11,7 +11,7 @@ class StateHandler:
         os.makedirs(self.directory, exist_ok=True)
 
     def update_state(self, state):
-        logging.info("[STATE HANDLER] Saving state {}".format(state))
+        logging.info("[STATE HANDLER] Saving state")
         with open(self.path, "w") as file:
             json.dump(state, file)
         logging.info("[STATE HANDLER] State saved")
