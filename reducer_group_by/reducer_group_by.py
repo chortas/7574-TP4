@@ -20,7 +20,7 @@ class ReducerGroupBy():
         self.state_handler = StateHandler(id)
         state = self.state_handler.get_state()
         if len(state) != 0:
-            logging.info("[REDUCER_GROUP_BY] Found state {}".format(state))
+            logging.info("[REDUCER_GROUP_BY] Found state")
             self.act_sentinel = state["act_sentinel"]
             self.players_to_group = state["players_to_group"]
         else:
@@ -46,12 +46,10 @@ class ReducerGroupBy():
     def __callback(self, ch, method, properties, body):
         players = json.loads(body)
         if len(players) == 0:
-            logging.info("[REDUCER_GROUP_BY] Received 1 sentinel")
             self.__handle_end_group_by(ch)
             self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
-        logging.info("[REDUCER_GROUP_BY] Received {}".format(players))
         for player in players:
             group_by_element = player[self.group_by_field]
             self.players_to_group[group_by_element] = self.players_to_group.get(group_by_element, [])

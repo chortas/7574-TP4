@@ -6,7 +6,7 @@ from common.utils import *
 from hashlib import sha256
 
 class Join():
-    def __init__(self, match_token_exchange, n_reducers, match_consumer_routing_key, 
+    def __init__(self, id, match_token_exchange, n_reducers, match_consumer_routing_key, 
     join_exchange, match_id_field, player_consumer_routing_key, player_match_field,
     heartbeat_sender):
         self.match_token_exchange = match_token_exchange
@@ -17,6 +17,7 @@ class Join():
         self.player_consumer_routing_key = player_consumer_routing_key
         self.player_match_field = player_match_field
         self.heartbeat_sender = heartbeat_sender
+        self.id = id
 
     def start(self):
         self.heartbeat_sender.start()
@@ -26,7 +27,7 @@ class Join():
 
         create_exchange(channel, self.match_token_exchange, "direct")
         queue_name = create_and_bind_queue(channel, self.match_token_exchange, 
-        routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key], queue_name=f"input_{self.match_token_exchange}")
+        routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key], queue_name=f"input_{self.match_token_exchange}_{self.id}")
 
         for reducer_exchange in self.reducer_exchanges:
             create_exchange(channel, reducer_exchange, "direct")

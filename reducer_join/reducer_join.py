@@ -45,7 +45,6 @@ class ReducerJoin():
         "matches": list(self.matches), "players": list(self.players)})
 
     def start(self):
-        logging.info("[REDUCER_JOIN] INICIANDO MANDO HEARTBEAT")
         self.heartbeat_sender.start()
         wait_for_rabbit()
         connection, channel = create_connection_and_channel()
@@ -58,10 +57,8 @@ class ReducerJoin():
     def __callback(self, ch, method, properties, body):
         elements = json.loads(body) 
         if len(elements) == 0:
-            logging.info("[REDUCER_JOIN] Received sentinel")
             self.__handle_end_join(ch)
             self.__save_state()
-            logging.info("[REDUCER_JOIN] Mando ACK DEL CENTINELA y me quedan {}".format(self.len_join))
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         for element in elements:

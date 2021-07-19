@@ -26,19 +26,19 @@ por el esquema de centinelas planteado.
 N_FILTER_ARSD = 1
 
 # reducers_group_by_match
-N_REDUCERS_GROUP_BY_MATCH = 1
+N_REDUCERS_GROUP_BY_MATCH = 2
 
 # reducers_rate_winner_join
-N_REDUCERS_RATE_WINNER_JOIN = 1
+N_REDUCERS_RATE_WINNER_JOIN = 2
 
 # reducers_top_civ_join
-N_REDUCERS_TOP_CIV_JOIN = 1
+N_REDUCERS_TOP_CIV_JOIN = 2
 
 # reducers_group_by_civ_rate_winner
-N_REDUCERS_GROUP_BY_CIV_RATE_WINNER = 1
+N_REDUCERS_GROUP_BY_CIV_RATE_WINNER = 2
 
 # reducers_group_by_civ_top_civ
-N_REDUCERS_GROUP_BY_CIV_TOP_CIV = 1
+N_REDUCERS_GROUP_BY_CIV_TOP_CIV = 2
 
 # filter_solo_winner_player
 N_FILTER_SOLO_WINNER_PLAYER = 1

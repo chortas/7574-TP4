@@ -15,6 +15,7 @@ def parse_config_params():
         config_params["match_id_field"] = os.environ["MATCH_ID_FIELD"]
         config_params["player_consumer_routing_key"] = os.environ["PLAYER_CONSUMER_ROUTING_KEY"]
         config_params["player_match_field"] = os.environ["PLAYER_MATCH_FIELD"]
+        config_params["id"] = os.environ["ID"]
         
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -28,9 +29,9 @@ def main():
 
     config_params = parse_config_params()
 
-    heartbeat_sender = HeartbeatSender()
+    heartbeat_sender = HeartbeatSender(config_params["id"])
     
-    join = Join(config_params["match_token_exchange"], int(config_params["n_reducers"]),
+    join = Join(config_params["id"], config_params["match_token_exchange"], int(config_params["n_reducers"]),
     config_params["match_consumer_routing_key"], config_params["join_exchange"], 
     config_params["match_id_field"], config_params["player_consumer_routing_key"],
     config_params["player_match_field"], heartbeat_sender)
