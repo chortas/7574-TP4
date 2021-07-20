@@ -51,14 +51,8 @@ docker-compose-logs:
 	docker-compose -f docker-compose.yml logs -f
 .PHONY: docker-compose-logs
 
-clean-storage:
-	sudo rm -rf storage
-	mkdir storage
-.PHONY: clean-storage
-
 restart:
 	make docker-compose-down
-	make clean-storage
 	make docker-compose-up
 .PHONY: restart
 
