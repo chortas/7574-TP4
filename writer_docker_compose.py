@@ -81,11 +81,11 @@ def write_section(compose_file, container_name, image, env_variables, export_por
     else:
       section += f"""    volumes: 
       - /var/run/docker.sock:/var/run/docker.sock
-      - /storage:/states\n"""
+      - ./storage:/states\n"""
 
     if volume:
       section += f"""    volumes: 
-      - /storage:/states\n"""
+      - ./storage:/states\n"""
 
     section += final_section
     
@@ -133,7 +133,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
       "GROUP_BY_FIELD": "match", "GROUPED_PLAYERS_QUEUE": "grouped_players_queue_filter_swp", 
       "BATCH_TO_SEND": 1000, "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT, 
       "FREQUENCY": MONITOR_FREQUENCY, "ID": f"reducer_group_by_match_{i}"}        
-      write_section(compose_file, f"reducer_group_by_match_{i}", "reducer_group_by", env_variables)
+      write_section(compose_file, f"reducer_group_by_match_{i}", "reducer_group_by", env_variables, volume=True)
     
     # filter_solo_winner_player
     env_variables = {"GROUPED_PLAYERS_QUEUE": "grouped_players_queue_filter_swp", 
@@ -210,7 +210,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
       "PLAYER_MATCH_FIELD": "match", "BATCH_TO_SEND": 1000, "MONITOR_IP": "monitor", 
       "MONITOR_PORT": MONITOR_PORT, "FREQUENCY": MONITOR_FREQUENCY, 
       "ID": f"reducer_rate_winner_join_{i}"}
-      write_section(compose_file, f"reducer_rate_winner_join_{i}", "reducer_join", env_variables)
+      write_section(compose_file, f"reducer_rate_winner_join_{i}", "reducer_join", env_variables, volume=True)
 
     # reducers_top_civ_join
     for i in range(1, N_REDUCERS_TOP_CIV_JOIN+1):
@@ -239,7 +239,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
       "SENTINEL_AMOUNT": N_REDUCERS_RATE_WINNER_JOIN, "BATCH_TO_SEND": 1000,
       "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT, 
       "FREQUENCY": MONITOR_FREQUENCY, "ID": f"reducer_group_by_civ_rate_winner_{i}"}
-      write_section(compose_file, f"reducer_group_by_civ_rate_winner_{i}", "reducer_group_by", env_variables)
+      write_section(compose_file, f"reducer_group_by_civ_rate_winner_{i}", "reducer_group_by", env_variables, volume=True)
 
     # group_by_civ_top_civ
     GROUP_BY_CIV_TOP_CIV_QUEUE = "group_by_civ_top_civ_queue"
@@ -257,7 +257,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
       "SENTINEL_AMOUNT": N_REDUCERS_TOP_CIV_JOIN, "BATCH_TO_SEND": 1000,
       "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT, 
       "FREQUENCY": MONITOR_FREQUENCY, "ID": f"reducer_group_by_civ_top_civ_{i}"}
-      write_section(compose_file, f"reducer_group_by_civ_top_civ_{i}", "reducer_group_by", env_variables)
+      write_section(compose_file, f"reducer_group_by_civ_top_civ_{i}", "reducer_group_by", env_variables, volume=True)
 
     # winner_rate_calculator
     env_variables = {"GROUPED_PLAYERS_QUEUE": "winner_rate_calculator_queue", 
@@ -279,12 +279,12 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     "FREQUENCY": MONITOR_FREQUENCY}
     for i in range(1, N_TOP_CIV_CALCULATOR+1):
       env_variables["ID"] = f"top_civ_calculator_{i}"
-      write_section(compose_file, f"top_civ_calculator_{i}", "top_civ_calculator", env_variables)
+      write_section(compose_file, f"top_civ_calculator_{i}", "top_civ_calculator", env_variables, volume=True)
     
     # interface
     env_variables = {"API_PORT": 3002, "SENTINEL_AMOUNT": N_FINAL_NODES, 
     "INTERNAL_PORT": INTERNAL_PORT, "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT, 
     "FREQUENCY": MONITOR_FREQUENCY, "ID": "interface"}
-    write_section(compose_file, "interface", "interface", env_variables, export_port=env_variables['API_PORT'])
+    write_section(compose_file, "interface", "interface", env_variables, export_port=env_variables['API_PORT'], volume=True)
 
     write_constant(compose_file, VOLUME)
