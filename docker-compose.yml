@@ -23,6 +23,7 @@ services:
     environment:
       - INTERNAL_PORT=3003
       - TIMEOUT=10
+      - ID=monitor
 
   filter_avg_rating_server_duration_1:
     container_name: filter_avg_rating_server_duration_1

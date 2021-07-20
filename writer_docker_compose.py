@@ -99,7 +99,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     write_constant(compose_file, HEADER_AND_RABBIT)
     
     # monitor
-    env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10}
+    env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10, "ID": "monitor"}
     write_section(compose_file, "monitor", "monitor", env_variables, monitor = True)
 
     # filter_avg_rating_server_duration

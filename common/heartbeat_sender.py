@@ -15,23 +15,26 @@ class HeartbeatSender(Process):
         self.id = node_id if node_id else os.environ["ID"]
         self.frequency = int(os.environ["FREQUENCY"])
 
-    def run(self):
+    def __init_port(self):
+        logging.info("[HEARTBEAT_SENDER] Trying to connect with node")
+        logging.info(f"[HEARTBEAT_SENDER] Host: {self.host}, port: {self.monitor_port}")
+
+        self.sock = ClientSocket(address = (self.host, self.monitor_port))
+
+
+        self.sock.send_with_size(json.dumps({"id": self.id}))
+
+        response = self.sock.recv_with_size()
+        logging.info("[HEARTBEAT_SENDER] Recv port")
+        self.port = int(response["port"])
+
+        self.sock.close()
+
+        logging.info(f"[HEARTBEAT_SENDER] Port received: {self.port}")
+
+
+    def __send_heartbeats(self):
         try:
-            logging.info("[HEARTBEAT_SENDER] Trying to connect with node")
-            logging.info(f"[HEARTBEAT_SENDER] Host: {self.host}, port: {self.monitor_port}")
-
-            self.sock = ClientSocket(address = (self.host, self.monitor_port))
-
-
-            self.sock.send_with_size(json.dumps({"id": self.id}))
-
-            response = self.sock.recv_with_size()
-            logging.info("[HEARTBEAT_SENDER] Recv port")
-            self.port = int(response["port"])
-
-            self.sock.close()
-
-            logging.info(f"[HEARTBEAT_SENDER] Port received: {self.port}")
             heartbeat_listener_socket = ClientSocket(address = (self.host, self.port))
 
             while True:
@@ -41,3 +44,8 @@ class HeartbeatSender(Process):
 
         except Exception as err:
             logging.info(f"[HEARTBEAT_SENDER] Failed sending heartbeat: {err}")
+            self.__send_heartbeats() # retry
+
+    def run(self):
+        self.__init_port()
+        self.__send_heartbeats()
