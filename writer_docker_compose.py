@@ -59,10 +59,14 @@ MONITOR_PORT = 3003
 
 MONITOR_FREQUENCY = 3
 
+N_MONITORS = 2
+
+MONITOR_IPS = [f"monitor_{i}" for i in range(1, N_MONITORS+1)]
+
 def write_constant(compose_file, constant):
     compose_file.write(constant)
 
-def write_section(compose_file, container_name, image, env_variables, export_port = None, monitor = False, volume=False):
+def write_section(compose_file, container_name, image, env_variables, monitor = False, volume=False):
     section = f"""\n  {container_name}:
     container_name: {container_name}
     image: {image}:latest
@@ -71,7 +75,9 @@ def write_section(compose_file, container_name, image, env_variables, export_por
     depends_on:
       - rabbitmq\n"""
 
-    section_monitor = f"""      - monitor\n"""
+    section_monitor = ""
+    for monitor_ip in MONITOR_IPS:
+      section_monitor += f"""      - {monitor_ip}\n"""
     final_section = f"""    links: 
       - rabbitmq
     environment:\n"""
@@ -91,28 +97,28 @@ def write_section(compose_file, container_name, image, env_variables, export_por
     
     for env, variable in env_variables.items():
       section += f"      - {env}={variable}\n"
-    if export_port:
-      section += f"""    ports:\n      - "{export_port}:{export_port}"\n"""
     compose_file.write(section)
 
 with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     write_constant(compose_file, HEADER_AND_RABBIT)
     
     # monitor
-    env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10, "ID": "monitor"}
-    write_section(compose_file, "monitor", "monitor", env_variables, monitor = True)
+    for i in range(N_MONITORS):
+      env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10, "ID": MONITOR_IPS[i]}
+      write_section(compose_file, MONITOR_IPS[i], "monitor", env_variables, monitor = True)
 
     # filter_avg_rating_server_duration
     env_variables = {"MATCH_QUEUE": "filter_arsd_queue", "OUTPUT_QUEUE": "output_queue_1", 
     "AVG_RATING_FIELD": "average_rating", "SERVER_FIELD": "server",
     "DURATION_FIELD": "duration", "ID_FIELD": "token",
     "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT,
-    "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT,
+    "MONITOR_IPS": ",".join(MONITOR_IPS), "MONITOR_PORT": MONITOR_PORT,
     "FREQUENCY": MONITOR_FREQUENCY}
     for i in range(1, N_FILTER_ARSD+1):
       env_variables["ID"] = f"filter_avg_rating_server_duration_{i}"
       write_section(compose_file, f"filter_avg_rating_server_duration_{i}", "filter_avg_rating_server_duration", env_variables)
 
+    '''
     # matches_broadcaster
     env_variables = {"ROW_QUEUE": "match_queue", 
     "QUEUES_TO_SEND": "filter_arsd_queue,filter_lmm_queue",
@@ -280,11 +286,12 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     for i in range(1, N_TOP_CIV_CALCULATOR+1):
       env_variables["ID"] = f"top_civ_calculator_{i}"
       write_section(compose_file, f"top_civ_calculator_{i}", "top_civ_calculator", env_variables, volume=True)
+    '''
     
     # interface
     env_variables = {"API_PORT": 3002, "SENTINEL_AMOUNT": N_FINAL_NODES, 
-    "INTERNAL_PORT": INTERNAL_PORT, "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT, 
+    "INTERNAL_PORT": INTERNAL_PORT, "MONITOR_IPS": ",".join(MONITOR_IPS), "MONITOR_PORT": MONITOR_PORT, 
     "FREQUENCY": MONITOR_FREQUENCY, "ID": "interface"}
-    write_section(compose_file, "interface", "interface", env_variables, export_port=env_variables['API_PORT'], volume=True)
+    write_section(compose_file, "interface", "interface", env_variables, volume=True)
 
     write_constant(compose_file, VOLUME)

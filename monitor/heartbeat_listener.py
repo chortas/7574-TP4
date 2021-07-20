@@ -23,7 +23,7 @@ class HeartbeatListener(Process):
                 component_sock = self.socket.accept()
                 continue
             
-            #logging.info("[HEARTBEAT_LISTENER] Node connection accepted")
+            logging.info(f"[HEARTBEAT_LISTENER] I'm {self.id} and I accepted a node connection")
             try:
                 info = self.socket.recv_from(component_sock, recv_timeout = self.timeout)
                 if info["id"] == id:
