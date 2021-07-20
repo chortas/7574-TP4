@@ -11,6 +11,11 @@ services:
       - 5672:5672
 """
 
+VOLUME = """
+volumes:
+  storage:
+"""
+
 '''
 Constantes que hay que modificar para escalar y generar el docker compose correspondiente.
 Los nodos que no están incluidos en estas constantes no pueden escalarse (son nodos master) 
@@ -24,10 +29,10 @@ N_FILTER_ARSD = 1
 N_REDUCERS_GROUP_BY_MATCH = 2
 
 # reducers_rate_winner_join
-N_REDUCERS_RATE_WINNER_JOIN = 1
+N_REDUCERS_RATE_WINNER_JOIN = 2
 
 # reducers_top_civ_join
-N_REDUCERS_TOP_CIV_JOIN = 1
+N_REDUCERS_TOP_CIV_JOIN = 2
 
 # reducers_group_by_civ_rate_winner
 N_REDUCERS_GROUP_BY_CIV_RATE_WINNER = 2
@@ -54,10 +59,10 @@ MONITOR_PORT = 3003
 
 MONITOR_FREQUENCY = 3
 
-def write_header_and_rabbit(compose_file):
-    compose_file.write(HEADER_AND_RABBIT)
+def write_constant(compose_file, constant):
+    compose_file.write(constant)
 
-def write_section(compose_file, container_name, image, env_variables, export_port = None, monitor = False):
+def write_section(compose_file, container_name, image, env_variables, export_port = None, monitor = False, volume=False):
     section = f"""\n  {container_name}:
     container_name: {container_name}
     image: {image}:latest
@@ -75,7 +80,12 @@ def write_section(compose_file, container_name, image, env_variables, export_por
       section += section_monitor
     else:
       section += f"""    volumes: 
-      - /var/run/docker.sock:/var/run/docker.sock\n"""
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /storage:/states\n"""
+
+    if volume:
+      section += f"""    volumes: 
+      - /storage:/states\n"""
 
     section += final_section
     
@@ -86,10 +96,10 @@ def write_section(compose_file, container_name, image, env_variables, export_por
     compose_file.write(section)
 
 with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
-    write_header_and_rabbit(compose_file)
+    write_constant(compose_file, HEADER_AND_RABBIT)
     
     # monitor
-    env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10}
+    env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10, "ID": "monitor"}
     write_section(compose_file, "monitor", "monitor", env_variables, monitor = True)
 
     # filter_avg_rating_server_duration
@@ -258,7 +268,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     "FREQUENCY": MONITOR_FREQUENCY}
     for i in range(1, N_WINNER_RATE_CALCULATOR+1):
       env_variables["ID"] = f"winner_rate_calculator_{i}"
-      write_section(compose_file, f"winner_rate_calculator_{i}", "winner_rate_calculator", env_variables)
+      write_section(compose_file, f"winner_rate_calculator_{i}", "winner_rate_calculator", env_variables, volume=True)
 
     # top_civ_calculator
     env_variables = {"GROUPED_PLAYERS_QUEUE": "top_civ_calculator_queue", 
@@ -276,3 +286,5 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     "INTERNAL_PORT": INTERNAL_PORT, "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT, 
     "FREQUENCY": MONITOR_FREQUENCY, "ID": "interface"}
     write_section(compose_file, "interface", "interface", env_variables, export_port=env_variables['API_PORT'])
+
+    write_constant(compose_file, VOLUME)

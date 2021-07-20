@@ -18,6 +18,7 @@ class FilterLadderMapMirror():
         self.heartbeat_sender = heartbeat_sender
 
     def start(self):
+        self.heartbeat_sender.start()
         wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
@@ -25,13 +26,13 @@ class FilterLadderMapMirror():
         create_queue(channel, self.match_queue)
         create_exchange(channel, self.match_token_exchange, "direct")
 
-        self.heartbeat_sender.start()
-        consume(channel, self.match_queue, self.__callback)
+        
+        consume(channel, self.match_queue, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         matches = json.loads(body)
         if len(matches) == 0:
-           return self.__handle_end_filter(ch, body)
+           return self.__handle_end_filter(ch, body, method)
 
         winner_rate_matches = []
         top_civ_matches = []
@@ -46,11 +47,13 @@ class FilterLadderMapMirror():
 
         if len(winner_rate_matches) != 0: send_message(ch, json.dumps(winner_rate_matches), queue_name=self.rate_winner_routing_key, exchange_name=self.match_token_exchange)
         if len(top_civ_matches) != 0: send_message(ch, json.dumps(top_civ_matches), queue_name=self.top_civ_routing_key, exchange_name=self.match_token_exchange)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    def __handle_end_filter(self, ch, body):
+    def __handle_end_filter(self, ch, body, method):
         logging.info(f"[FILTER_LADDER_MAP_MIRROR] The client already sent all messages")
         send_message(ch, body, queue_name=self.rate_winner_routing_key, exchange_name=self.match_token_exchange)
         send_message(ch, body, queue_name=self.top_civ_routing_key, exchange_name=self.match_token_exchange)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def __meets_winner_rate_condition(self, match):
         match_ladder = match[self.ladder_field]

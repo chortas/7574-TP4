@@ -13,6 +13,7 @@ def parse_config_params():
         config_params["output_queue"] = os.environ["OUTPUT_QUEUE"]
         config_params["winner_field"] = os.environ["WINNER_FIELD"]
         config_params["sentinel_amount"] = os.environ["SENTINEL_AMOUNT"]
+        config_params["id"] = os.environ["ID"]
         
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -27,9 +28,9 @@ def main():
     config_params = parse_config_params()
 
     interface_communicator = InterfaceCommunicator()
-    heartbeat_sender = HeartbeatSender()
+    heartbeat_sender = HeartbeatSender(config_params["id"])
 
-    winner_rate_calculator = WinnerRateCalculator(config_params["grouped_players_queue"], 
+    winner_rate_calculator = WinnerRateCalculator(config_params["id"], config_params["grouped_players_queue"], 
     config_params["output_queue"], config_params["winner_field"], 
     int(config_params["sentinel_amount"]), interface_communicator, heartbeat_sender)
 

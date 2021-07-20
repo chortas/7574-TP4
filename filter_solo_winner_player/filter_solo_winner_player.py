@@ -15,6 +15,7 @@ class FilterSoloWinnerPlayer():
         self.heartbeat_sender = heartbeat_sender
 
     def start(self):
+        self.heartbeat_sender.start()
         wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
@@ -22,20 +23,21 @@ class FilterSoloWinnerPlayer():
         create_queue(channel, self.grouped_players_queue)
         create_queue(channel, self.output_queue)
 
-        self.heartbeat_sender.start()
-        consume(channel, self.grouped_players_queue, self.__callback)
+        consume(channel, self.grouped_players_queue, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         matches = json.loads(body)
         if len(matches) == 0:
             logging.info(f"[FILTER_SOLO_WINNER_PLAYER] End of file")
             self.interface_communicator.send_finish_message()
+            ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
         for match, players in matches.items():
             if self.__meets_the_condition(match, players):
-                logging.info(f"[FILTER_SOLO_WINNER_PLAYER] Player matches condition!")
+                #logging.info(f"[FILTER_SOLO_WINNER_PLAYER] Player matches condition!")
                 send_message(ch, match, queue_name=self.output_queue)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
         
     def __meets_the_condition(self, match, players):
         if len(players) != 2: return False

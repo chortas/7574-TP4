@@ -15,6 +15,7 @@ class GroupBy():
         self.heartbeat_sender = heartbeat_sender
     
     def start(self):
+        self.heartbeat_sender.start()
         wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
@@ -24,8 +25,7 @@ class GroupBy():
         for reducer_queue in self.reducer_queues:
             create_queue(channel, reducer_queue)
 
-        self.heartbeat_sender.start()
-        consume(channel, self.queue_name, self.__callback)
+        consume(channel, self.queue_name, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         players = json.loads(body)
@@ -33,6 +33,7 @@ class GroupBy():
         if len(players) == 0:
             for reducer_queue in self.reducer_queues:
                 send_message(ch, body, queue_name=reducer_queue)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
             return
 
         # { group_id_field: {players that have that id} }
@@ -40,6 +41,7 @@ class GroupBy():
 
         for reducer_id, elements in message.items():
             send_message(ch, json.dumps(elements), queue_name=self.reducer_queues[reducer_id])
+        ch.basic_ack(delivery_tag=method.delivery_tag)
         
 
     def __get_message(self, players):

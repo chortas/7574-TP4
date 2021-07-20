@@ -6,7 +6,7 @@ from common.utils import *
 from hashlib import sha256
 
 class Join():
-    def __init__(self, match_token_exchange, n_reducers, match_consumer_routing_key, 
+    def __init__(self, id, match_token_exchange, n_reducers, match_consumer_routing_key, 
     join_exchange, match_id_field, player_consumer_routing_key, player_match_field,
     heartbeat_sender):
         self.match_token_exchange = match_token_exchange
@@ -17,21 +17,22 @@ class Join():
         self.player_consumer_routing_key = player_consumer_routing_key
         self.player_match_field = player_match_field
         self.heartbeat_sender = heartbeat_sender
+        self.id = id
 
     def start(self):
+        self.heartbeat_sender.start()
         wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
 
         create_exchange(channel, self.match_token_exchange, "direct")
-        queue_name = create_and_bind_anonymous_queue(channel, self.match_token_exchange, 
-        routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key])
+        queue_name = create_and_bind_queue(channel, self.match_token_exchange, 
+        routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key], queue_name=f"input_{self.match_token_exchange}_{self.id}")
 
         for reducer_exchange in self.reducer_exchanges:
             create_exchange(channel, reducer_exchange, "direct")
 
-        self.heartbeat_sender.start()
-        consume(channel, queue_name, self.__callback)
+        consume(channel, queue_name, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         elements_parsed = json.loads(body) 
@@ -39,6 +40,7 @@ class Join():
             logging.info("[JOIN] The client already sent all messages")
             for reducer_exchange in self.reducer_exchanges:
                 send_message(ch, body, queue_name=method.routing_key, exchange_name=reducer_exchange)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
         message = self.__get_message(elements_parsed, method)
@@ -47,6 +49,7 @@ class Join():
             exchange_name = self.reducer_exchanges[reducer_id]
             send_message(ch, json.dumps(elements), queue_name=method.routing_key, 
             exchange_name=exchange_name)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def __get_message(self, elements_parsed, method):
         message = {}

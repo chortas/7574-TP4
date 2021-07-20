@@ -2,20 +2,38 @@
 import logging
 import json
 from common.utils import *
+from common.state_handler import StateHandler
 
 class ReducerGroupBy():
-    def __init__(self, group_by_queue, group_by_field, grouped_players_queue, 
+    def __init__(self, id, group_by_queue, group_by_field, grouped_players_queue, 
     sentinel_amount, batch_to_send, heartbeat_sender):
+        logging.info("[REDUCER_GROUP_BY] Init")
         self.group_by_queue = group_by_queue
         self.group_by_field = group_by_field
         self.grouped_players_queue = grouped_players_queue
-        self.players_to_group = {}
         self.sentinel_amount = sentinel_amount
-        self.act_sentinel = sentinel_amount
         self.batch_to_send = batch_to_send
         self.heartbeat_sender = heartbeat_sender
+        self.__init_state(id)
+
+    def __init_state(self, id):
+        self.state_handler = StateHandler(id)
+        state = self.state_handler.get_state()
+        if len(state) != 0:
+            logging.info("[REDUCER_GROUP_BY] Found state")
+            self.act_sentinel = state["act_sentinel"]
+            self.players_to_group = state["players_to_group"]
+        else:
+            logging.info("[REDUCER_GROUP_BY] State not found")
+            self.players_to_group = {}
+            self.act_sentinel = self.sentinel_amount
+            self.__save_state()
+
+    def __save_state(self):
+        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "players_to_group": self.players_to_group})
 
     def start(self):
+        self.heartbeat_sender.start()
         wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
@@ -23,19 +41,21 @@ class ReducerGroupBy():
         create_queue(channel, self.group_by_queue)
         create_queue(channel, self.grouped_players_queue)
 
-        self.heartbeat_sender.start()
-        consume(channel, self.group_by_queue, self.__callback)
+        consume(channel, self.group_by_queue, self.__callback, auto_ack=False)
 
     def __callback(self, ch, method, properties, body):
         players = json.loads(body)
         if len(players) == 0:
-            logging.info("[REDUCER_GROUP_BY] Received 1 sentinel")
-            return self.__handle_end_group_by(ch)
-        
+            self.__handle_end_group_by(ch)
+            self.__save_state()
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
         for player in players:
             group_by_element = player[self.group_by_field]
             self.players_to_group[group_by_element] = self.players_to_group.get(group_by_element, [])
             self.players_to_group[group_by_element].append(player)
+        self.__save_state()
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def __handle_end_group_by(self, ch):
         self.act_sentinel -= 1

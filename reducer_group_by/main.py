@@ -15,6 +15,7 @@ def parse_config_params():
                                             if "SENTINEL_AMOUNT" in os.environ
                                             else 1) 
         config_params["batch_to_send"] = os.environ["BATCH_TO_SEND"]
+        config_params["id"] = os.environ["ID"]
 
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -28,9 +29,9 @@ def main():
 
     config_params = parse_config_params()
 
-    heartbeat_sender = HeartbeatSender()
+    heartbeat_sender = HeartbeatSender(config_params["id"])
 
-    reducer_group_by = ReducerGroupBy(config_params["group_by_queue"],
+    reducer_group_by = ReducerGroupBy(config_params["id"], config_params["group_by_queue"],
     config_params["group_by_field"], config_params["grouped_players_queue"], 
     int(config_params["sentinel_amount"]), int(config_params["batch_to_send"]), heartbeat_sender)
 

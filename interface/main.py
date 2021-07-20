@@ -14,6 +14,7 @@ def parse_config_params():
         config_params["sentinel_amount"] =  (int(os.environ["SENTINEL_AMOUNT"])
                                             if "SENTINEL_AMOUNT" in os.environ
                                             else 1) 
+        config_params["id"] = os.environ["ID"]
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
     except ValueError as e:
@@ -26,9 +27,9 @@ def main():
 
     config_params = parse_config_params()
 
-    heartbeat_sender = HeartbeatSender()
+    heartbeat_sender = HeartbeatSender(config_params["id"])
 
-    interface = Interface(config_params['api_port'], config_params['internal_port'], 
+    interface = Interface(config_params["id"], config_params['api_port'], config_params['internal_port'], 
     config_params["sentinel_amount"], heartbeat_sender)
     
     interface.start()
