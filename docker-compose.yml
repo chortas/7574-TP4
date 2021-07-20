@@ -17,7 +17,7 @@ services:
       - rabbitmq
     volumes: 
       - /var/run/docker.sock:/var/run/docker.sock
-      - /storage:/states
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -95,6 +95,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -115,6 +117,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -290,6 +294,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -313,6 +319,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -402,6 +410,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -423,6 +433,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -464,6 +476,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -485,6 +499,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -507,7 +523,7 @@ services:
       - rabbitmq
       - monitor
     volumes: 
-      - /storage:/states
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -530,6 +546,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -552,6 +570,8 @@ services:
     depends_on:
       - rabbitmq
       - monitor
+    volumes: 
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
