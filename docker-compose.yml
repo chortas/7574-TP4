@@ -17,7 +17,7 @@ services:
       - rabbitmq
     volumes: 
       - /var/run/docker.sock:/var/run/docker.sock
-      - /storage:/states
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
@@ -34,7 +34,7 @@ services:
       - rabbitmq
     volumes: 
       - /var/run/docker.sock:/var/run/docker.sock
-      - /storage:/states
+      - ./storage:/states
     links: 
       - rabbitmq
     environment:
