@@ -34,18 +34,20 @@ class HeartbeatSender(Process):
 
 
     def __send_heartbeats(self):
-        try:
-            heartbeat_listener_socket = ClientSocket(address = (self.host, self.port))
+        heartbeat_listener_socket = ClientSocket(address = (self.host, self.port))
 
-            while True:
-                #logging.info(f"[HEARTBEAT_SENDER] About to send heartbeat to {self.id}")
-                heartbeat_listener_socket.send_with_size(json.dumps({"id": self.id}))
-                sleep(self.frequency)
-
-        except Exception as err:
-            logging.info(f"[HEARTBEAT_SENDER] Failed sending heartbeat: {err}")
-            self.__send_heartbeats() # retry
+        while True:
+            #logging.info(f"[HEARTBEAT_SENDER] About to send heartbeat to {self.id}")
+            heartbeat_listener_socket.send_with_size(json.dumps({"id": self.id}))
+            sleep(self.frequency)
 
     def run(self):
         self.__init_port()
-        self.__send_heartbeats()
+        while True:
+            try:
+                self.__send_heartbeats()
+            except Exception as err:
+                logging.info(f"[HEARTBEAT_SENDER] Failed sending heartbeat: {err}")
+                sleep(self.frequency)
+                continue # retry
+        

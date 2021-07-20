@@ -8,10 +8,11 @@ from socket import timeout
 class HeartbeatListener(Process):
     def __init__(self, port_to_recv, id, timeout):
         Process.__init__(self)
-        logging.info("Constructor heartbeat listener")
+        
         self.socket = ServerSocket('', port_to_recv, 1)
         self.id = id
         self.timeout = timeout
+        logging.info(f"Constructor heartbeat listener {self.id} {port_to_recv}")
 
     def run(self):
         component_sock = self.socket.accept()
