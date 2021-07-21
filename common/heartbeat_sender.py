@@ -18,6 +18,10 @@ class HeartbeatSender(Process):
         self.frequency = int(os.environ["FREQUENCY"])
         self.__init_state(self.id)
 
+    def __update_idx(self):
+        self.act_idx = (self.act_idx + 1) % len(self.hosts)
+        self.__save_state()
+
     def __init_state(self, id):
         self.state_handler = StateHandler(id, filename = "heartbeat_info.json")
         state = self.state_handler.get_state()
@@ -39,15 +43,19 @@ class HeartbeatSender(Process):
 
         self.sock = ClientSocket(address = (act_host, self.monitor_port))
 
-        self.sock.send_with_size(json.dumps({"id": self.id}))
+        try:
+            self.sock.send_with_size(json.dumps({"id": self.id}))
 
-        response = self.sock.recv_with_size()
-        logging.info("[HEARTBEAT_SENDER] Recv port")
-        self.port = int(response["port"])
+            response = self.sock.recv_with_size()
+            logging.info("[HEARTBEAT_SENDER] Recv port")
+            self.port = int(response["port"])
 
-        self.sock.close()
+            self.sock.close()
 
-        logging.info(f"[HEARTBEAT_SENDER] Port received: {self.port}")
+            logging.info(f"[HEARTBEAT_SENDER] Port received: {self.port}")
+        
+        except Exception as err:
+            self.__update_idx()
 
     def __send_heartbeats(self):
         act_host = self.hosts[self.act_idx]
@@ -64,8 +72,7 @@ class HeartbeatSender(Process):
 
         except Exception as err:
             logging.info(f"[HEARTBEAT_SENDER] Failed sending heartbeat: {err}")
-            self.act_idx = (self.act_idx + 1) % len(self.hosts)
-            self.__save_state()
+            self.__update_idx()
             self.__init_port()
             self.__send_heartbeats() # retry
 
