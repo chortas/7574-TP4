@@ -49,7 +49,7 @@ class Monitor():
                 self.nodes[node_id] = self.last_port
                 self.last_port += 1
                 self.__save_state() 
-                heartbeat_listener = HeartbeatListener(self.last_port, node_id, self.timeout)
+                heartbeat_listener = HeartbeatListener(self.nodes[node_id], node_id, self.timeout)
                 self.internal_socket.send_to(component_sock, json.dumps({"port": self.nodes[node_id]}))
                 heartbeat_listener.start()
                 self.heartbeat_listeners.append(heartbeat_listener)
