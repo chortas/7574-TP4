@@ -21,8 +21,9 @@ class HeartbeatSender(Thread):
         logging.info(f"Pos is {self.pos}")
         self.election_port = int(os.environ["ELECTION_PORT"]) 
         self.leader_info_port = int(os.environ["LEADER_INFO_PORT"])
-        self.__init_state(self.id, change_is_leader_callback)
         self.election_started = SharedValue(False)
+        self.__init_state(self.id, change_is_leader_callback)
+        
 
         self.election_listening = Thread(target=self.__start_listening_elections)
         self.leader_listening = Thread(target=self.__start_listening_leaders)
@@ -62,6 +63,7 @@ class HeartbeatSender(Thread):
             
             try:
                 info = leader_socket.recv_from(monitor_component_sock)
+                logging.info(f"[LISTENING_LEADER] Recieve {info} and election is {self.election_started.read()}")
                 if info["leader"] and self.election_started.read():
                     logging.info(f"[HEARTBEAT_SENDER] New leader is monitor_{self.leader.read()+1}")
                     self.leader.update(info["leader"])
@@ -74,6 +76,7 @@ class HeartbeatSender(Thread):
                 continue
             
     def __start_election(self):
+        logging.info(f"[HEARTBEAT_SENDER] Election? {self.election_started.read()}")
         if not self.election_started.read():
             logging.info("[HEARTBEAT_SENDER] Election started")
             self.election_started.update(True)
@@ -88,28 +91,33 @@ class HeartbeatSender(Thread):
                     self.sock = ClientSocket(address = (host, self.election_port))
                     self.sock.send_with_size(json.dumps({"id": self.pos}))
 
-                    response = self.sock.recv_with_size()
+                    response = ACK_SCHEME.unpack(self.sock.recv_with_size(decode=False))[0]
                     logging.info("[HEARTBEAT_SENDER] RECV ELECTION ACK")
                     
-                    if len(response) != 0:
+                    if response:
                         responses +=1
                         logging.info(f"[HEARTBEAT_SENDER] Im not leader")
                         break
                 
                 except Exception as err:
+                    logging.info(f"[HEARTBEAT_SENDER] Error sending election msg. {err}")
                     continue
 
             if responses == 0:
                 logging.info(f"[HEARTBEAT_SENDER] Im leader")
                 for i in range(len(self.hosts)):
+                    if i == self.pos: continue
                     host = self.hosts[i]
-                    self.sock = ClientSocket(address = (host, self.leader_info_port))
                     try:
+                        logging.info(f"[HEARTBEAT_SENDER] Trying to send leader msg to {host}")
+                        self.sock = ClientSocket(address = (host, self.leader_info_port))
                         self.sock.send_with_size(json.dumps({"leader": self.pos}))
+                        logging.info(f"[HEARTBEAT_SENDER] Sended leader msg to {host}")
                     
                     except Exception as err:
-                        logging.info(f"[HEARTBEAT_SENDER] Error sending that im leader")
+                        logging.info(f"[HEARTBEAT_SENDER] Error sending that im leader to {host}: {err}")
                         continue
+                logging.info(f"[HEARTBEAT_SENDER] Finish sending leader msg")
                 self.leader.update(self.pos)
                 self.is_leader = True
                 self.__save_state()
@@ -129,11 +137,14 @@ class HeartbeatSender(Thread):
         self.__save_state()
 
     def __save_state(self):
+        self.election_started.update(False)
         self.change_is_leader_callback(self.is_leader)
         self.state_handler.update_state({"leader": self.leader.read()})
 
     def __init_port(self):
-        act_host = self.hosts[self.leader.read()]
+        leader = self.leader.read()
+        if leader == self.pos: return
+        act_host = self.hosts[leader]
 
         logging.info(f"[HEARTBEAT_SENDER] Trying to connect with node ({act_host}, {self.monitor_port})")
 
@@ -155,6 +166,7 @@ class HeartbeatSender(Thread):
             self.__start_election()
 
     def __send_heartbeats(self):
+        self.election_started.update(False)
         while True:
             act_host = self.hosts[self.leader.read()]
 
@@ -164,7 +176,7 @@ class HeartbeatSender(Thread):
                 heartbeat_listener_socket = ClientSocket(address = (act_host, self.port))
 
                 while not self.is_leader:
-                    logging.info(f"[HEARTBEAT_SENDER] Sending heartbeat from {self.id} to ({act_host},{self.port})")
+                    #logging.info(f"[HEARTBEAT_SENDER] Sending heartbeat from {self.id} to ({act_host},{self.port})")
                     heartbeat_listener_socket.send_with_size(json.dumps({"id": self.id}))
                     #logging.info(f"[HEARTBEAT_SENDER] About to sleep: {self.id}")
                     #sleep(self.frequency)
@@ -172,6 +184,7 @@ class HeartbeatSender(Thread):
             except Exception as err:
                 logging.info(f"[HEARTBEAT_SENDER] Failed sending heartbeat: {err}. Start election")
                 self.__start_election()
+                if self.leader.read(): continue
                 self.__init_port()
                 self.__send_heartbeats() # retry
 
@@ -179,7 +192,8 @@ class HeartbeatSender(Thread):
         self.election_listening.start()
         self.leader_listening.start()
         logging.info(f"[HEARTBEAT_SENDER] Init. Start election")
+        sleep(5)# wating other monitors
         self.__start_election()
-        logging.info("[HEARTBEAT_SENDER] Finish election")
+        logging.info(f"[HEARTBEAT_SENDER] Finish election {self.leader.read()}")
         self.__init_port()
         self.__send_heartbeats()

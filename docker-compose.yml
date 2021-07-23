@@ -19,6 +19,8 @@ services:
       - LEADER_INFO_PORT=3002
       - LEADER=2
       - IS_LEADER=False
+    depends_on:
+      - monitor_3
 
   monitor_2:
     container_name: monitor_2
@@ -38,6 +40,8 @@ services:
       - LEADER_INFO_PORT=3002
       - LEADER=2
       - IS_LEADER=False
+    depends_on:
+      - monitor_3
 
   monitor_3:
     container_name: monitor_3
