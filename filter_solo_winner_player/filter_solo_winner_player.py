@@ -32,7 +32,6 @@ class FilterSoloWinnerPlayer():
 
     def start(self):
         self.heartbeat_sender.start()
-        wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
 

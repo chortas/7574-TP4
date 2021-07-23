@@ -5,10 +5,6 @@ import struct
 
 ACK_SCHEME = struct.Struct('?')
 
-def wait_for_rabbit():
-    logging.info("Waiting for rabbit..")
-    #time.sleep(100)
-
 def create_connection_and_channel():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
     return connection, connection.channel()
