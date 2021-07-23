@@ -62,7 +62,7 @@ class HeartbeatSender(Thread):
             
             try:
                 info = leader_socket.recv_from(monitor_component_sock)
-                if info["leader"]:
+                if info["leader"] and self.election_started.read():
                     logging.info(f"[HEARTBEAT_SENDER] New leader is monitor_{self.leader.read()+1}")
                     self.leader.update(info["leader"])
                     self.__save_state()
@@ -143,7 +143,7 @@ class HeartbeatSender(Thread):
             self.sock.send_with_size(json.dumps({"id": self.id}))
 
             response = self.sock.recv_with_size()
-            logging.info("[HEARTBEAT_SENDER] Recv port")
+            logging.info(f"[HEARTBEAT_SENDER] Recv port: {response}")
             self.port = int(response["port"])
 
             self.sock.close()
