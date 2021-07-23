@@ -1,25 +1,14 @@
 version: '3'
 services:
-  rabbitmq:
-    build:
-      context: ./rabbitmq
-      dockerfile: Dockerfile
-    ports:
-      - 15672:15672
-      - 5672:5672
 
   monitor_1:
     container_name: monitor_1
     image: monitor:latest
     entrypoint: python3 /main.py
     restart: on-failure
-    depends_on:
-      - rabbitmq
     volumes: 
       - /var/run/docker.sock:/var/run/docker.sock
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - INTERNAL_PORT=3003
       - TIMEOUT=10
@@ -30,13 +19,9 @@ services:
     image: monitor:latest
     entrypoint: python3 /main.py
     restart: on-failure
-    depends_on:
-      - rabbitmq
     volumes: 
       - /var/run/docker.sock:/var/run/docker.sock
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - INTERNAL_PORT=3003
       - TIMEOUT=10
@@ -48,11 +33,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - MATCH_QUEUE=filter_arsd_queue
       - OUTPUT_QUEUE=output_queue_1
@@ -73,11 +55,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - ROW_QUEUE=match_queue
       - QUEUES_TO_SEND=filter_arsd_queue,filter_lmm_queue
@@ -93,11 +72,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - QUEUE_NAME=group_by_player_queue
       - N_REDUCERS=2
@@ -115,13 +91,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - GROUP_BY_QUEUE=group_by_match_queue_1
       - GROUP_BY_FIELD=match
@@ -139,13 +112,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - GROUP_BY_QUEUE=group_by_match_queue_2
       - GROUP_BY_FIELD=match
@@ -163,11 +133,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - GROUPED_PLAYERS_QUEUE=grouped_players_queue_filter_swp
       - OUTPUT_QUEUE=output_queue_2
@@ -187,11 +154,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - MATCH_QUEUE=filter_lmm_queue
       - MATCH_TOKEN_EXCHANGE=match_token_exchange
@@ -213,11 +177,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - ROW_QUEUE=player_queue
       - QUEUES_TO_SEND=player_cleaner_queue,filter_rating_queue,group_by_player_queue
@@ -233,11 +194,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - PLAYER_QUEUE=player_cleaner_queue
       - MATCH_FIELD=match
@@ -257,11 +215,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - PLAYER_QUEUE=filter_rating_queue
       - RATING_FIELD=rating
@@ -282,11 +237,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - MATCH_TOKEN_EXCHANGE=match_token_exchange
       - N_REDUCERS=2
@@ -307,11 +259,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - MATCH_TOKEN_EXCHANGE=match_token_exchange
       - N_REDUCERS=2
@@ -332,13 +281,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - JOIN_EXCHANGE=join_rate_winner_1
       - MATCH_CONSUMER_ROUTING_KEY=rate_winner_routing_key
@@ -359,13 +305,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - JOIN_EXCHANGE=join_rate_winner_2
       - MATCH_CONSUMER_ROUTING_KEY=rate_winner_routing_key
@@ -386,11 +329,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - JOIN_EXCHANGE=join_top_civ_1
       - MATCH_CONSUMER_ROUTING_KEY=top_civ_routing_key
@@ -411,11 +351,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - JOIN_EXCHANGE=join_top_civ_2
       - MATCH_CONSUMER_ROUTING_KEY=top_civ_routing_key
@@ -436,11 +373,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - QUEUE_NAME=grouped_rate_winner_queue
       - N_REDUCERS=2
@@ -458,13 +392,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - GROUP_BY_QUEUE=group_by_civ_rate_winner_queue_1
       - GROUP_BY_FIELD=civ
@@ -483,13 +414,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - GROUP_BY_QUEUE=group_by_civ_rate_winner_queue_2
       - GROUP_BY_FIELD=civ
@@ -508,11 +436,8 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
-    links: 
-      - rabbitmq
     environment:
       - QUEUE_NAME=grouped_top_civ_queue
       - N_REDUCERS=2
@@ -530,13 +455,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - GROUP_BY_QUEUE=group_by_civ_top_civ_queue_1
       - GROUP_BY_FIELD=civ
@@ -555,13 +477,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - GROUP_BY_QUEUE=group_by_civ_top_civ_queue_2
       - GROUP_BY_FIELD=civ
@@ -580,13 +499,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - GROUPED_PLAYERS_QUEUE=winner_rate_calculator_queue
       - OUTPUT_QUEUE=output_queue_3
@@ -606,13 +522,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - GROUPED_PLAYERS_QUEUE=top_civ_calculator_queue
       - OUTPUT_QUEUE=output_queue_4
@@ -632,13 +545,10 @@ services:
     entrypoint: python3 /main.py
     restart: on-failure
     depends_on:
-      - rabbitmq
       - monitor_1
       - monitor_2
     volumes: 
       - ./storage:/states
-    links: 
-      - rabbitmq
     environment:
       - API_PORT=3002
       - SENTINEL_AMOUNT=4
