@@ -60,20 +60,24 @@ class HeartbeatSender(Thread):
             if not monitor_component_sock:
                 monitor_component_sock = leader_socket.accept()
                 continue
-            
+            logging.info(f"[LISTENING_LEADER] Accept leader connection!!!")
             try:
                 info = leader_socket.recv_from(monitor_component_sock)
                 logging.info(f"[LISTENING_LEADER] Recieve {info} and election is {self.election_started.read()}")
-                if info["leader"] and self.election_started.read():
-                    logging.info(f"[HEARTBEAT_SENDER] New leader is monitor_{self.leader.read()+1}")
+                if info["leader"] and self.leader.read() != info["leader"]:
+                    logging.info(f"[HEARTBEAT_SENDER] New leader is monitor_{info['leader']+1}")
                     self.leader.update(info["leader"])
                     self.__save_state()
                     self.election_started.update(False)
-                    break
+                    monitor_component_sock.close()
+                    continue
                 else:
                     continue
-            except:
+            except Exception as err:
+                logging.info(f"[LISTENING_LEADER] Error recieving {err}!!!")
                 continue
+            finally:
+                monitor_component_sock=None
             
     def __start_election(self):
         logging.info(f"[HEARTBEAT_SENDER] Election? {self.election_started.read()}")
@@ -113,10 +117,11 @@ class HeartbeatSender(Thread):
                         self.sock = ClientSocket(address = (host, self.leader_info_port))
                         self.sock.send_with_size(json.dumps({"leader": self.pos}))
                         logging.info(f"[HEARTBEAT_SENDER] Sended leader msg to {host}")
-                    
                     except Exception as err:
                         logging.info(f"[HEARTBEAT_SENDER] Error sending that im leader to {host}: {err}")
                         continue
+                    finally:
+                        if self.sock: self.sock.close()
                 logging.info(f"[HEARTBEAT_SENDER] Finish sending leader msg")
                 self.leader.update(self.pos)
                 self.is_leader = True
@@ -138,32 +143,36 @@ class HeartbeatSender(Thread):
 
     def __save_state(self):
         self.election_started.update(False)
+        self.is_leader = f"monitor_{self.leader.read()+1}" == self.id
         self.change_is_leader_callback(self.is_leader)
         self.state_handler.update_state({"leader": self.leader.read()})
 
     def __init_port(self):
-        leader = self.leader.read()
-        if leader == self.pos: return
-        act_host = self.hosts[leader]
+        while True:
+            leader = self.leader.read()
+            if leader == self.pos: continue
+            act_host = self.hosts[leader]
 
-        logging.info(f"[HEARTBEAT_SENDER] Trying to connect with node ({act_host}, {self.monitor_port})")
+            logging.info(f"[HEARTBEAT_SENDER] Trying to connect with node ({act_host}, {self.monitor_port})")
 
-        self.sock = ClientSocket(address = (act_host, self.monitor_port))
+            try:
+                self.sock = ClientSocket(address = (act_host, self.monitor_port))
+                self.sock.send_with_size(json.dumps({"id": self.id}))
 
-        try:
-            self.sock.send_with_size(json.dumps({"id": self.id}))
+                response = self.sock.recv_with_size()
+                logging.info(f"[HEARTBEAT_SENDER] Recv port: {response}")
+                self.port = int(response["port"])
 
-            response = self.sock.recv_with_size()
-            logging.info(f"[HEARTBEAT_SENDER] Recv port: {response}")
-            self.port = int(response["port"])
+                self.sock.close()
 
-            self.sock.close()
+                logging.info(f"[HEARTBEAT_SENDER] Port received: {self.port}")
+                break
+            
+            except Exception as err:
+                logging.info(f"[HEARTBEAT_SENDER] Problem initiating port: {err}. Start election")
+                self.__start_election()
+                continue
 
-            logging.info(f"[HEARTBEAT_SENDER] Port received: {self.port}")
-        
-        except Exception as err:
-            logging.info(f"[HEARTBEAT_SENDER] Problem initiating port: {err}. Start election")
-            self.__start_election()
 
     def __send_heartbeats(self):
         self.election_started.update(False)
@@ -183,8 +192,6 @@ class HeartbeatSender(Thread):
 
             except Exception as err:
                 logging.info(f"[HEARTBEAT_SENDER] Failed sending heartbeat: {err}. Start election")
-                self.__start_election()
-                if self.leader.read(): continue
                 self.__init_port()
                 self.__send_heartbeats() # retry
 

@@ -27,7 +27,7 @@ class Monitor():
             self.last_port = state["last_port"]
             self.is_leader.update(state["is_leader"])
             for id, port in self.nodes.items():
-                heartbeat_listener = HeartbeatListener(port, id, self.timeout)
+                heartbeat_listener = HeartbeatListener(port, id, self.timeout, self.is_leader)
                 heartbeat_listener.start()
                 if "monitor" in id and not self.is_leader.read(): continue
                 self.heartbeat_listeners[id] = heartbeat_listener
@@ -52,10 +52,9 @@ class Monitor():
                 self.heartbeat_listeners[id].terminate()
     
     def start(self):
-        is_leader = self.is_leader.read()
         self.heartbeat_sender.start()
         while True:
-            if not is_leader:
+            if not self.is_leader.read():
                 self.__stop_monitor_listeners()
             logging.info("[MONITOR] Hearing nodes")
             component_sock = self.internal_socket.accept()
@@ -66,16 +65,12 @@ class Monitor():
             node_id = info["id"]
             logging.info(f"[MONITOR] Id: {node_id}")
 
-            if "monitor" in node_id and not is_leader:
-                self.internal_socket.send_to(component_sock, json.dumps({"error": True}))
-                continue
-
             if node_id not in self.nodes:
                 logging.info("[MONITOR] Id not registered")
                 self.nodes[node_id] = self.last_port
                 self.last_port += 1
                 self.__save_state()
-                heartbeat_listener = HeartbeatListener(self.nodes[node_id], node_id, self.timeout)
+                heartbeat_listener = HeartbeatListener(self.nodes[node_id], node_id, self.timeout, self.is_leader)
                 self.internal_socket.send_to(component_sock, json.dumps({"port": self.nodes[node_id]}))
                 heartbeat_listener.start()
                 self.heartbeat_listeners[node_id] = heartbeat_listener

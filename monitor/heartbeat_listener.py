@@ -1,17 +1,18 @@
 import logging
 import subprocess
 
-from multiprocessing import Process
+from threading import Thread
 from common.custom_socket.server_socket import ServerSocket
 from socket import timeout
 
-class HeartbeatListener(Process):
-    def __init__(self, port_to_recv, id, timeout):
-        Process.__init__(self)
+class HeartbeatListener(Thread):
+    def __init__(self, port_to_recv, id, timeout, is_leader):
+        Thread.__init__(self)
         
         self.socket = ServerSocket('', port_to_recv, 1)
         self.id = id
         self.timeout = timeout
+        self.is_leader = is_leader
         logging.info(f"Constructor heartbeat listener {self.id} {port_to_recv}")
 
     def run(self):
@@ -33,6 +34,7 @@ class HeartbeatListener(Process):
                     pass
 
             except:
+                if "monitor" in self.id and not self.is_leader.read(): continue
                 logging.info(f"[HEARTBEAT_LISTENER] The id {self.id} has died :'(")
                 result = subprocess.run(['docker', 'start', self.id], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 logging.info('Command executed. Result={}. Output={}. Error={}'.format(result.returncode, result.stdout, result.stderr))
