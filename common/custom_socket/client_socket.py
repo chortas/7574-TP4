@@ -13,10 +13,7 @@ class ClientSocket(Socket):
     
     def connect(self, address):
         # Connect the socket to the port where the server is listening
-        try:
-            self.socket.connect(address)
-        except:
-            logging.info("Error connecting")
+        self.socket.connect(address)
 
     def set_timeout(self, timeout):
         self.socket.settimeout(timeout)

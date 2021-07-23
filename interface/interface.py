@@ -7,7 +7,7 @@ from common.state_handler_safe import StateHandlerSafe
 
 INITIAL_STATUS = 'READY'
 
-from shared_value import SharedValue
+from common.shared_value import SharedValue
 
 class Interface():
     def __init__(self, id, api_port, internal_port, sentinels_amount, heartbeat_sender):

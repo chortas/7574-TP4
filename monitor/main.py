@@ -10,6 +10,7 @@ def parse_config_params():
         config_params["internal_port"] = os.environ["INTERNAL_PORT"]
         config_params["timeout"] = os.environ["TIMEOUT"]
         config_params["id"] = os.environ["ID"]
+        config_params["is_leader"] = os.environ["IS_LEADER"] == "True"
     
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -23,7 +24,7 @@ def main():
 
     config_params = parse_config_params()
 
-    monitor = Monitor(config_params["id"], int(config_params["internal_port"]), int(config_params["timeout"]))
+    monitor = Monitor(config_params["id"], int(config_params["internal_port"]), int(config_params["timeout"]), config_params["is_leader"])
     
     monitor.start()
 
