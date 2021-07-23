@@ -145,8 +145,9 @@ services:
       - MONITOR_IP=monitor
       - MONITOR_PORT=3003
       - FREQUENCY=3
-      - ID=filter_solo_winner_player_2
       - MONITOR_IPS=monitor_1,monitor_2
+      - SENTINEL_AMOUNT=2
+      - ID=filter_solo_winner_player_1
 
   filter_ladder_map_mirror:
     container_name: filter_ladder_map_mirror

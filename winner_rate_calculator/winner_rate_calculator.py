@@ -14,7 +14,6 @@ class WinnerRateCalculator():
         self.sentinel_amount = sentinel_amount
         self.heartbeat_sender = heartbeat_sender
         self.__init_state(id)
-        
     
     def start(self):
         self.heartbeat_sender.start()
