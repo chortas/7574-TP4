@@ -15,6 +15,7 @@ def parse_config_params():
         config_params["winner_field"] = os.environ["WINNER_FIELD"]
         config_params["id"] = os.environ["ID"]
         config_params["sentinel_amount"] = os.environ["SENTINEL_AMOUNT"]
+        config_params["id_field"] = os.environ["ID_FIELD"]
 
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -34,7 +35,7 @@ def main():
     filter_swp = FilterSoloWinnerPlayer(config_params["grouped_players_queue"], 
     config_params["output_queue"], config_params["rating_field"], 
     config_params["winner_field"], interface_communicator, heartbeat_sender, 
-    config_params["id"], int(config_params["sentinel_amount"]))
+    config_params["id"], int(config_params["sentinel_amount"]), config_params["id_field"])
     
     filter_swp.start()
 

@@ -6,7 +6,7 @@ from common.state_handler import StateHandler
 
 class FilterSoloWinnerPlayer():
     def __init__(self, grouped_players_queue, output_queue, rating_field, winner_field, 
-    interface_communicator, heartbeat_sender, id, sentinel_amount):
+    interface_communicator, heartbeat_sender, id, sentinel_amount, id_field):
         self.grouped_players_queue = grouped_players_queue
         self.output_queue = output_queue
         self.rating_field = rating_field
@@ -14,6 +14,7 @@ class FilterSoloWinnerPlayer():
         self.interface_communicator = interface_communicator
         self.heartbeat_sender = heartbeat_sender
         self.sentinel_amount = sentinel_amount
+        self.id_field = id_field
         self.__init_state(id)
     
     def __init_state(self, id):
@@ -22,14 +23,14 @@ class FilterSoloWinnerPlayer():
         if len(state) != 0:
             logging.info("[FILTER_SOLO_WINNER_PLAYER] Found state {}".format(state))
             self.act_sentinel = state["act_sentinel"]
-            self.matches_with_condition = state["matches"]
+            self.matches = state["matches"]
         else:
             self.act_sentinel = self.sentinel_amount
-            self.matches_with_condition = []
+            self.matches = []
             self.__save_state()
 
     def __save_state(self):
-        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "matches": self.matches_with_condition})
+        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "matches": self.matches})
 
     def start(self):
         self.heartbeat_sender.start()
@@ -48,17 +49,18 @@ class FilterSoloWinnerPlayer():
             self.act_sentinel -= 1
             if self.act_sentinel == 0:
                 self.act_sentinel = self.sentinel_amount
-                self.matches_with_condition = []
+                self.matches = []
                 logging.info(f"[FILTER_SOLO_WINNER_PLAYER] End of file")
                 self.interface_communicator.send_finish_message()
             self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
-        for match, players in matches.items():              
-            if self.__meets_the_condition(players) and match not in self.matches_with_condition:
+        for match, players in matches.items():
+            players = self.__remove_duplicates(players)
+            if self.__meets_the_condition(players) and match not in self.matches:
                 send_message(ch, match, queue_name=self.output_queue)
-                self.matches_with_condition.append(match)
+                self.matches.append(match)
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
@@ -74,3 +76,14 @@ class FilterSoloWinnerPlayer():
                 rating_loser = int(player[self.rating_field])
         
         return rating_loser != 0 and rating_winner > 1000 and ((rating_loser - rating_winner) / rating_winner) * 100 > 30
+
+    def __remove_duplicates(self, players):
+        result = []
+        ids = set()
+        for player in players:
+            id = player[self.id_field]
+            if id not in ids:
+                ids.add(id)
+                result.append(player)
+        return result
+        

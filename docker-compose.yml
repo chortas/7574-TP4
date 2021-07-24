@@ -149,6 +149,7 @@ services:
       - FREQUENCY=3
       - MONITOR_IPS=monitor_1,monitor_2
       - SENTINEL_AMOUNT=2
+      - ID_FIELD=token
       - ID=filter_solo_winner_player_1
 
   filter_ladder_map_mirror:
