@@ -3,20 +3,35 @@ import logging
 import json
 from datetime import datetime, timedelta
 from common.utils import *
+from common.state_handler import StateHandler
 
 class FilterSoloWinnerPlayer():
     def __init__(self, grouped_players_queue, output_queue, rating_field, winner_field, 
-    interface_communicator, heartbeat_sender):
+    interface_communicator, heartbeat_sender, id, sentinel_amount):
         self.grouped_players_queue = grouped_players_queue
         self.output_queue = output_queue
         self.rating_field = rating_field
         self.winner_field = winner_field
         self.interface_communicator = interface_communicator
         self.heartbeat_sender = heartbeat_sender
+        self.sentinel_amount = sentinel_amount
+        self.__init_state(id)
+    
+    def __init_state(self, id):
+        self.state_handler = StateHandler(id)
+        state = self.state_handler.get_state()
+        if len(state) != 0:
+            logging.info("[FILTER SOLO WINNER PLAYER] Found state {}".format(state))
+            self.act_sentinel = state["act_sentinel"]
+        else:
+            self.act_sentinel = self.sentinel_amount
+            self.__save_state()
+
+    def __save_state(self):
+        self.state_handler.update_state({"act_sentinel": self.act_sentinel})
 
     def start(self):
         self.heartbeat_sender.start()
-        wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
 
@@ -28,8 +43,12 @@ class FilterSoloWinnerPlayer():
     def __callback(self, ch, method, properties, body):
         matches = json.loads(body)
         if len(matches) == 0:
-            logging.info(f"[FILTER_SOLO_WINNER_PLAYER] End of file")
-            self.interface_communicator.send_finish_message()
+            self.act_sentinel -= 1
+            if self.act_sentinel == 0:
+                self.act_sentinel = self.sentinel_amount
+                logging.info(f"[FILTER_SOLO_WINNER_PLAYER] End of file")
+                self.interface_communicator.send_finish_message()
+            self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         

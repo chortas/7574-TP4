@@ -20,7 +20,6 @@ class TopCivCalculator():
     
     def start(self):
         self.heartbeat_sender.start()
-        wait_for_rabbit()
 
         connection, channel = create_connection_and_channel()
 
@@ -51,7 +50,6 @@ class TopCivCalculator():
             if self.__send_top_5(ch):
                 logging.info("[TOP_CIV_CALCULATOR] End of file")
                 self.interface_communicator.send_finish_message()
-            self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
 
@@ -69,10 +67,13 @@ class TopCivCalculator():
 
     def __send_top_5(self, channel):
         self.act_sentinel -= 1
-        if self.act_sentinel != 0:return False
+        if self.act_sentinel != 0:
+            self.__save_state()
+            return False
         logging.info(f"To send top 5 -> civilizations: {self.civilizations}")
         top_5_civilizations = dict(Counter(self.civilizations).most_common(5))
         send_message(channel, json.dumps(top_5_civilizations), queue_name=self.output_queue)
         self.civilizations = {}
         self.act_sentinel = self.sentinel_amount
+        self.__save_state()
         return True

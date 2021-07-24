@@ -3,10 +3,10 @@ import logging
 import json
 
 class StateHandler:
-    def __init__(self, node_id):
+    def __init__(self, node_id, filename = "state.json"):
         self.id = node_id
         self.directory = "states/{}/".format(node_id)
-        self.filename = "state.json"
+        self.filename = filename
         self.path = "./" + self.directory + self.filename
         os.makedirs(self.directory, exist_ok=True)
 

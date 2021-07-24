@@ -46,8 +46,9 @@ class ReducerJoin():
 
     def start(self):
         self.heartbeat_sender.start()
-        wait_for_rabbit()
+
         connection, channel = create_connection_and_channel()
+        
         create_exchange(channel, self.join_exchange, exchange_type="direct")
         queue_name = create_and_bind_queue(channel, self.join_exchange, 
             routing_keys=[self.match_consumer_routing_key, self.player_consumer_routing_key], queue_name=f"input_{self.join_exchange}")
