@@ -138,7 +138,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     "MONITOR_IPS": ",".join(MONITOR_IPS), "SENTINEL_AMOUNT": 2}    
     for i in range(1, N_FILTER_SOLO_WINNER_PLAYER+1):
       env_variables["ID"] = f"filter_solo_winner_player_{i}"
-      write_section(compose_file, f"filter_solo_winner_player_{i}", "filter_solo_winner_player", env_variables)
+      write_section(compose_file, f"filter_solo_winner_player_{i}", "filter_solo_winner_player", env_variables, volume=True)
 
     # filter_ladder_map_mirror
     env_variables = {"MATCH_QUEUE": "filter_lmm_queue", 

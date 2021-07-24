@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import logging
 import json
-from datetime import datetime, timedelta
 from common.utils import *
 from common.state_handler import StateHandler
 
@@ -16,6 +15,7 @@ class FilterSoloWinnerPlayer():
         self.heartbeat_sender = heartbeat_sender
         self.sentinel_amount = sentinel_amount
         self.__init_state(id)
+        logging.info("[FILTER SOLO WINNER PLAYER] Started")
     
     def __init_state(self, id):
         self.state_handler = StateHandler(id)
@@ -23,12 +23,14 @@ class FilterSoloWinnerPlayer():
         if len(state) != 0:
             logging.info("[FILTER SOLO WINNER PLAYER] Found state {}".format(state))
             self.act_sentinel = state["act_sentinel"]
+            self.matches = state["matches"]
         else:
             self.act_sentinel = self.sentinel_amount
+            self.matches = []
             self.__save_state()
 
     def __save_state(self):
-        self.state_handler.update_state({"act_sentinel": self.act_sentinel})
+        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "matches": self.matches})
 
     def start(self):
         self.heartbeat_sender.start()
@@ -42,23 +44,30 @@ class FilterSoloWinnerPlayer():
 
     def __callback(self, ch, method, properties, body):
         matches = json.loads(body)
+
         if len(matches) == 0:
             self.act_sentinel -= 1
             if self.act_sentinel == 0:
                 self.act_sentinel = self.sentinel_amount
-                logging.info(f"[FILTER_SOLO_WINNER_PLAYER] End of file")
+                self.matches = []
+                logging.info(f"[FILTER SOLO WINNER PLAYER] End of file")
                 self.interface_communicator.send_finish_message()
             self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
         for match, players in matches.items():
-            if self.__meets_the_condition(match, players):
-                #logging.info(f"[FILTER_SOLO_WINNER_PLAYER] Player matches condition!")
+            if match in self.matches:
+                logging.info(f"[FILTER SOLO WINNER PLAYER] Found duplicate: {match}")
+                continue # it is a duplicate               
+            if self.__meets_the_condition(players):
                 send_message(ch, match, queue_name=self.output_queue)
+            if match not in self.matches: # add to state because it is already processed
+                self.matches.append(match)
+                self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
-    def __meets_the_condition(self, match, players):
+    def __meets_the_condition(self, players):
         if len(players) != 2: return False
         rating_winner, rating_loser = (0,0)
         for player in players:
