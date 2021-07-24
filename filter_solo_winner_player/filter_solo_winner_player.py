@@ -23,14 +23,14 @@ class FilterSoloWinnerPlayer():
         if len(state) != 0:
             logging.info("[FILTER SOLO WINNER PLAYER] Found state {}".format(state))
             self.act_sentinel = state["act_sentinel"]
-            self.matches = state["matches"]
+            self.matches_with_condition = state["matches"]
         else:
             self.act_sentinel = self.sentinel_amount
-            self.matches = []
+            self.matches_with_condition = []
             self.__save_state()
 
     def __save_state(self):
-        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "matches": self.matches})
+        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "matches": self.matches_with_condition})
 
     def start(self):
         self.heartbeat_sender.start()
@@ -49,22 +49,18 @@ class FilterSoloWinnerPlayer():
             self.act_sentinel -= 1
             if self.act_sentinel == 0:
                 self.act_sentinel = self.sentinel_amount
-                self.matches = []
+                self.matches_with_condition = []
                 logging.info(f"[FILTER SOLO WINNER PLAYER] End of file")
                 self.interface_communicator.send_finish_message()
             self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
-        for match, players in matches.items():
-            if match in self.matches:
-                logging.info(f"[FILTER SOLO WINNER PLAYER] Found duplicate: {match}")
-                continue # it is a duplicate               
+        for match, players in matches.items():              
             if self.__meets_the_condition(players):
+                self.matches_with_condition.append(match)
                 send_message(ch, match, queue_name=self.output_queue)
-            if match not in self.matches: # add to state because it is already processed
-                self.matches.append(match)
-                self.__save_state()
+        self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
     def __meets_the_condition(self, players):
