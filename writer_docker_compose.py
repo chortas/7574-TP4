@@ -2,13 +2,6 @@ DOCKER_COMPOSE_FILE_NAME = "docker-compose.yml"
 
 HEADER_AND_RABBIT = """version: '3'
 services:
-  rabbitmq:
-    build:
-      context: ./rabbitmq
-      dockerfile: Dockerfile
-    ports:
-      - 15672:15672
-      - 5672:5672
 """
 
 VOLUME = """
@@ -71,16 +64,12 @@ def write_section(compose_file, container_name, image, env_variables, monitor = 
     container_name: {container_name}
     image: {image}:latest
     entrypoint: python3 /main.py
-    restart: on-failure
-    depends_on:
-      - rabbitmq\n"""
+    restart: on-failure\n"""
 
-    section_monitor = ""
+    section_monitor = "    depends_on:\n"
     for monitor_ip in MONITOR_IPS:
       section_monitor += f"""      - {monitor_ip}\n"""
-    final_section = f"""    links: 
-      - rabbitmq
-    environment:\n"""
+    final_section = f"""    environment:\n"""
 
     if not monitor: 
       section += section_monitor
@@ -148,8 +137,9 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     "OUTPUT_QUEUE": "output_queue_2", "RATING_FIELD": "rating", "WINNER_FIELD": "winner", 
     "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT, "MONITOR_IP": "monitor", 
     "MONITOR_PORT": MONITOR_PORT, "FREQUENCY": MONITOR_FREQUENCY, 
-    "ID": f"filter_solo_winner_player_{i}", "MONITOR_IPS": ",".join(MONITOR_IPS)}    
+    "MONITOR_IPS": ",".join(MONITOR_IPS), "SENTINEL_AMOUNT": 2}    
     for i in range(1, N_FILTER_SOLO_WINNER_PLAYER+1):
+      env_variables["ID"] = f"filter_solo_winner_player_{i}"
       write_section(compose_file, f"filter_solo_winner_player_{i}", "filter_solo_winner_player", env_variables)
 
     # filter_ladder_map_mirror
@@ -292,7 +282,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     for i in range(1, N_TOP_CIV_CALCULATOR+1):
       env_variables["ID"] = f"top_civ_calculator_{i}"
       write_section(compose_file, f"top_civ_calculator_{i}", "top_civ_calculator", env_variables, volume=True)
-    
+
     # interface
     env_variables = {"API_PORT": 3002, "SENTINEL_AMOUNT": N_FINAL_NODES, 
     "INTERNAL_PORT": INTERNAL_PORT, "MONITOR_IPS": ",".join(MONITOR_IPS), "MONITOR_PORT": MONITOR_PORT, 

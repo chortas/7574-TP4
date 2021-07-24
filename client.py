@@ -32,9 +32,7 @@ class Client:
 
     def start(self):
         if self._send_request():
-            logging.info("[CLIENT] Request accepted")
-            wait_for_rabbit()
-            
+            logging.info("[CLIENT] Request accepted")            
             self.match_sender.start()
             self.player_sender.start()
         else:

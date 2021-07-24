@@ -44,5 +44,4 @@ class HeartbeatListener(Thread):
                     logging.info('Command executed. Result={}. Output={}. Error={}'.format(result.returncode, result.stdout, result.stderr))
                     component_sock = self.socket.accept(timeout=self.timeout)
 
-            
         component_sock.close()

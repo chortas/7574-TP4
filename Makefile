@@ -38,7 +38,7 @@ docker-image:
 .PHONY: docker-image
 
 docker-compose-up: docker-image
-	docker-compose -f docker-compose.yml up --build --scale filter_solo_winner_player=2
+	docker-compose -f docker-compose.yml up --build --remove-orphans
 .PHONY: docker-compose-up
 
 docker-compose-down:
