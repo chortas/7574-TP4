@@ -57,7 +57,7 @@ class FilterSoloWinnerPlayer():
             return
         
         for match, players in matches.items():              
-            if self.__meets_the_condition(players):
+            if self.__meets_the_condition(players) and match not in self.matches_with_condition:
                 self.matches_with_condition.append(match)
                 send_message(ch, match, queue_name=self.output_queue)
         self.__save_state()
