@@ -176,7 +176,7 @@ class HeartbeatSender(Thread):
 
     def __send_heartbeats(self):
         self.election_started.update(False)
-        while True:
+        while True: #send heartbeat to all monitors
             act_host = self.hosts[self.leader.read()]
 
             try:
