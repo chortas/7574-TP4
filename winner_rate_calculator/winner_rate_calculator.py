@@ -56,6 +56,8 @@ class WinnerRateCalculator():
             return
 
         for civ in players_by_civ:
+            if civ in self.civs:
+                continue
             self.civs.append(civ)
             victories = 0
             players = players_by_civ[civ]
