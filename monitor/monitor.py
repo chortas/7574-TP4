@@ -5,7 +5,7 @@ from multiprocessing import Process
 from common.custom_socket.server_socket import ServerSocket
 from heartbeat_listener import HeartbeatListener
 from common.state_handler import StateHandler
-from monitor_hearbeat_sender import HeartbeatSender
+from heartbeat_manager import HeartbeatManager
 from common.shared_value import SharedValue
 
 class Monitor():
@@ -15,7 +15,7 @@ class Monitor():
         self.heartbeat_listeners = {}
         self.init_port = 5000
         self.is_leader = SharedValue(is_leader) #default
-        self.heartbeat_sender = HeartbeatSender(id, self.change_is_leader)
+        self.heartbeat_manager = HeartbeatManager(id, self.change_is_leader)
         self.__init_state(id, is_leader)
 
     def __init_state(self, id, is_leader):
@@ -45,17 +45,10 @@ class Monitor():
     def change_is_leader(self, is_it):
         logging.info(f"[MONITOR] Im changing is_leader to: {is_it}")
         self.is_leader.update(is_it)
-
-    def __stop_monitor_listeners(self):
-        for id, port in self.nodes.items():
-            if "monitor" in id:
-                self.heartbeat_listeners[id].terminate()
     
     def start(self):
-        self.heartbeat_sender.start()
+        self.heartbeat_manager.start()
         while True:
-            if not self.is_leader.read():
-                self.__stop_monitor_listeners()
             logging.info("[MONITOR] Hearing nodes")
             component_sock = self.internal_socket.accept()
             if not component_sock:

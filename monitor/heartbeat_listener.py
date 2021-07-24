@@ -18,7 +18,6 @@ class HeartbeatListener(Thread):
     def run(self):
         component_sock = self.socket.accept()
 
-        #logging.info("[HEARTBEAT_LISTENER] Antes del while")
         while True:
             if not component_sock:
                 component_sock = self.socket.accept()
