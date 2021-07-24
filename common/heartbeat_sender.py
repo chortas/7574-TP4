@@ -41,9 +41,8 @@ class HeartbeatSender(Process):
 
         logging.info(f"[HEARTBEAT_SENDER] Trying to connect with node ({act_host}, {self.monitor_port})")
 
-        self.sock = ClientSocket(address = (act_host, self.monitor_port))
-
         try:
+            self.sock = ClientSocket(address = (act_host, self.monitor_port))
             self.sock.send_with_size(json.dumps({"id": self.id}))
 
             response = self.sock.recv_with_size()

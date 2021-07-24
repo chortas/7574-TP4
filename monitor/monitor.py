@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import json
+import subprocess
 from multiprocessing import Process
 from common.custom_socket.server_socket import ServerSocket
 from heartbeat_listener import HeartbeatListener
@@ -27,7 +28,7 @@ class Monitor():
             self.last_port = state["last_port"]
             self.is_leader.update(state["is_leader"])
             for id, port in self.nodes.items():
-                heartbeat_listener = HeartbeatListener(port, id, self.timeout, self.is_leader)
+                heartbeat_listener = HeartbeatListener(port, id, self.timeout, self.is_leader, self.restart_node)
                 heartbeat_listener.start()
                 if "monitor" in id and not self.is_leader.read(): continue
                 self.heartbeat_listeners[id] = heartbeat_listener
@@ -45,6 +46,11 @@ class Monitor():
     def change_is_leader(self, is_it):
         logging.info(f"[MONITOR] Im changing is_leader to: {is_it}")
         self.is_leader.update(is_it)
+
+    def restart_node(self, node_id):
+        logging.info(f"Waking up node {node_id}")
+        result = subprocess.run(['docker', 'start', node_id], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logging.info('Command executed. Result={}. Output={}. Error={}'.format(result.returncode, result.stdout, result.stderr))
     
     def start(self):
         self.heartbeat_manager.start()
@@ -63,7 +69,7 @@ class Monitor():
                 self.nodes[node_id] = self.last_port
                 self.last_port += 1
                 self.__save_state()
-                heartbeat_listener = HeartbeatListener(self.nodes[node_id], node_id, self.timeout, self.is_leader)
+                heartbeat_listener = HeartbeatListener(self.nodes[node_id], node_id, self.timeout, self.is_leader, self.restart_node)
                 self.internal_socket.send_to(component_sock, json.dumps({"port": self.nodes[node_id]}))
                 heartbeat_listener.start()
                 self.heartbeat_listeners[node_id] = heartbeat_listener
