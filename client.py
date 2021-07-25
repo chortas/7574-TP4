@@ -39,38 +39,34 @@ class Client:
             logging.info("[CLIENT] Request declined")
     
     def __send_players(self):
-        self.__read_and_send(self.player_file, self.player_queue, "match_players_reducido.csv",
+        self.__read_and_send(self.player_file, self.player_queue,
         ["token","match","rating","color","civ","team","winner"])
 
     def __send_matches(self):
-        self.__read_and_send(self.match_file, self.match_queue, "matches_reducido.csv", 
+        self.__read_and_send(self.match_file, self.match_queue, 
         ["token","winning_team","mirror","ladder","patch","average_rating","map","map_size","num_players","server","duration"])
 
-    def __read_and_send(self, file_name, queue, other_file_name, fieldnames):
+    def __read_and_send(self, file_name, queue, fieldnames):
         connection, channel = create_connection_and_channel()
 
         create_queue(channel, queue)
 
-        with open(other_file_name, mode='w') as csv_file_writer:
-            writer = csv.DictWriter(csv_file_writer, fieldnames=fieldnames)
-            writer.writeheader()
-
-            with open(file_name, mode='r') as csv_file:
-                csv_reader = csv.DictReader(csv_file)    
-                counter_batch = 0
-                counter_lines = 0
-                lines = []
-                for element in csv_reader:
-                    counter_lines += 1
-                    lines.append(element)
-                    counter_batch += 1
-                    if counter_lines == self.n_lines:
-                        break
-                    if counter_batch == self.batch_to_send:
-                        logging.info(f"[{file_name}] Read {self.batch_to_send} lines and global counter is {counter_lines}")
-                        send_message(channel, json.dumps(lines), queue_name=queue)
-                        lines = []
-                        counter_batch = 0
+        with open(file_name, mode='r') as csv_file:
+            csv_reader = csv.DictReader(csv_file)    
+            counter_batch = 0
+            counter_lines = 0
+            lines = []
+            for element in csv_reader:
+                counter_lines += 1
+                lines.append(element)
+                counter_batch += 1
+                if counter_lines == self.n_lines:
+                    break
+                if counter_batch == self.batch_to_send:
+                    logging.info(f"[{file_name}] Read {self.batch_to_send} lines and global counter is {counter_lines}")
+                    send_message(channel, json.dumps(lines), queue_name=queue)
+                    lines = []
+                    counter_batch = 0
                 
         if len(lines) != 0: send_message(channel, json.dumps(lines), queue_name=queue)                    
         
