@@ -2,12 +2,13 @@
 import logging
 import json
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 from common.utils import *
+from common.state_handler import StateHandler
 
 class FilterAvgRatingServerDuration():
     def __init__(self, match_queue, output_queue, avg_rating_field, server_field, 
-    duration_field, id_field, interface_communicator, heartbeat_sender):
+    duration_field, id_field, interface_communicator, heartbeat_sender, id):
         self.match_queue = match_queue
         self.output_queue = output_queue
         self.avg_rating_field = avg_rating_field
@@ -16,6 +17,21 @@ class FilterAvgRatingServerDuration():
         self.id_field = id_field
         self.interface_communicator = interface_communicator
         self.heartbeat_sender = heartbeat_sender
+        self.__init_state(id)
+
+
+    def __init_state(self, id):
+        self.state_handler = StateHandler(id)
+        state = self.state_handler.get_state()
+        if len(state) != 0:
+            logging.info("[FILTER_AVG_RATING_SERVER_DURATION] Found state {}".format(state))
+            self.matches_with_condition = state["matches"]
+        else:
+            self.matches_with_condition = []
+            self.__save_state()
+
+    def __save_state(self):
+        self.state_handler.update_state({"matches": self.matches_with_condition})
 
     def start(self):
         self.heartbeat_sender.start()
@@ -32,11 +48,15 @@ class FilterAvgRatingServerDuration():
         if len(matches) == 0:
             logging.info("[FILTER_AVG_RATING_SERVER_DURATION] The client already sent all messages")
             self.interface_communicator.send_finish_message()
+            self.matches_with_condition = []
+            self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         for match in matches:
-            if self.__meets_the_condition(match):
+            if self.__meets_the_condition(match) and match not in self.matches_with_condition:
                 send_message(ch, match[self.id_field], queue_name=self.output_queue)
+                self.matches_with_condition.append(match)
+        self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
            
     def __meets_the_condition(self, match):
