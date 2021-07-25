@@ -19,7 +19,6 @@ class FilterAvgRatingServerDuration():
         self.heartbeat_sender = heartbeat_sender
         self.__init_state(id)
 
-
     def __init_state(self, id):
         self.state_handler = StateHandler(id)
         state = self.state_handler.get_state()
@@ -54,7 +53,7 @@ class FilterAvgRatingServerDuration():
             return
         for match in matches:
             if self.__meets_the_condition(match) and match not in self.matches_with_condition:
-                send_message(ch, match[self.id_field], queue_name=self.output_queue)
+                send_message(ch, self.__parse_match(match), queue_name=self.output_queue)
                 self.matches_with_condition.append(match)
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -68,6 +67,9 @@ class FilterAvgRatingServerDuration():
         server = match[self.server_field]
         duration = self.__parse_timedelta(match[self.duration_field])
         return average_rating > 2000 and server in ("koreacentral", "southeastasia", "eastus") and duration > timedelta(hours=2)
+
+    def __parse_match(self, match):
+        return json.dumps({"act_request": match["act_request"], self.id_field: match[self.id_field]})
 
     def __parse_timedelta(self, stamp):
         m = None
