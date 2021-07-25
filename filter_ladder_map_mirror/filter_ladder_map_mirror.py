@@ -37,7 +37,7 @@ class FilterLadderMapMirror():
 
         for match in matches:
             # drop extra rows
-            new_match = {self.id_field: match[self.id_field]}
+            new_match = {self.id_field: match[self.id_field], "act_request": match["act_request"]}
             if self.__meets_winner_rate_condition(match):
                 winner_rate_matches.append(new_match)
             elif self.__meets_top_civ_condition(match):

@@ -35,6 +35,7 @@ class PlayersCleaner():
             return
         new_players = self.__get_new_players(players)
         send_message(ch, json.dumps(new_players), queue_name=self.join_routing_key, exchange_name=self.join_exchange)
+        logging.info("[PLAYERS_CLEANER] Sent new players")
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def __handle_end_cleaner(self, ch, body):
@@ -46,6 +47,7 @@ class PlayersCleaner():
         for player in players:
             new_players.append({self.match_field: player[self.match_field],
                     self.civ_field: player[self.civ_field],
-                    self.winner_field: player[self.winner_field]})
+                    self.winner_field: player[self.winner_field],
+                    "act_request": player["act_request"]})
         
         return new_players

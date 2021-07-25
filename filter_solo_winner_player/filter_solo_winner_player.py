@@ -59,6 +59,7 @@ class FilterSoloWinnerPlayer():
         for match, players in matches.items():
             players = self.__remove_duplicates(players)
             act_request = players[0]["act_request"]
+            
             if self.__meets_the_condition(players) and match not in self.matches:
                 send_message(ch, self.__parse_match(match, act_request), queue_name=self.output_queue)
                 self.matches.append(match)

@@ -52,8 +52,9 @@ class ReducerGroupBy():
             self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
+        
+        self.__check_request(players[0])
         for player in players:
-            self.__check_request(player)
             group_by_element = player[self.group_by_field]
             self.players_to_group[group_by_element] = self.players_to_group.get(group_by_element, [])
             self.players_to_group[group_by_element].append(player)
@@ -61,13 +62,13 @@ class ReducerGroupBy():
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def __check_request(self, player):
-        pass
-        '''
+        logging.info("[REDUCER_GROUP_BY] About to check request...")
         if player["act_request"] != self.act_request and len(self.players_to_group) != 0:
+            logging.info("[REDUCER_GROUP_BY] Client failed previously")
             self.players_to_group = {}
             self.act_sentinel = self.sentinel_amount
-        '''
-        
+        self.act_request = player["act_request"]
+
     def __handle_end_group_by(self, ch):
         self.act_sentinel -= 1
         if self.act_sentinel != 0: return        

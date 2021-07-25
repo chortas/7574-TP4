@@ -43,6 +43,7 @@ class FilterRating():
             if rating > 2000:
                 new_player = {self.match_field: player[self.match_field],
                         self.civ_field: player[self.civ_field],
-                        self.id_field: player[self.id_field]}
+                        self.id_field: player[self.id_field],
+                        "act_request": player["act_request"]}
                 message.append(new_player)
         return message

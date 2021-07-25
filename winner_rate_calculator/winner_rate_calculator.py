@@ -64,9 +64,13 @@ class WinnerRateCalculator():
             for player in players:
                 if player[self.winner_field] == "True":
                     victories += 1
+            
+            act_request = players[0]["act_request"]
+            
             winner_rate = (victories / len(players)) * 100
-            result = {civ: winner_rate}
+            result = {civ: winner_rate, "act_request": act_request}
+            
             send_message(ch, json.dumps(result), queue_name=self.output_queue)
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        
+    
