@@ -19,6 +19,7 @@ class ServerSocket(Socket):
         Function blocks until a connection to a client is made.
         Then connection created is printed and returned
         """
+        logging.info("Trying to accept connection")
         try:
             if timeout:
                 self.socket.settimeout(timeout)
@@ -27,6 +28,7 @@ class ServerSocket(Socket):
             logging.info('Got connection from {}'.format(addr))
             return ClientSocket(connection = c)
         except socket.timeout:
+            logging.info('Timeout!!!')
             return None
 
     def send_to(self, client_sock, data, encode=True):

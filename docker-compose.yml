@@ -13,6 +13,12 @@ services:
       - INTERNAL_PORT=3003
       - TIMEOUT=10
       - ID=monitor_1
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
+      - MONITOR_PORT=3003
+      - ELECTION_PORT=3004
+      - LEADER_INFO_PORT=3005
+      - LEADER=2
+      - IS_LEADER=False
 
   monitor_2:
     container_name: monitor_2
@@ -26,6 +32,31 @@ services:
       - INTERNAL_PORT=3003
       - TIMEOUT=10
       - ID=monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
+      - MONITOR_PORT=3003
+      - ELECTION_PORT=3004
+      - LEADER_INFO_PORT=3005
+      - LEADER=2
+      - IS_LEADER=False
+
+  monitor_3:
+    container_name: monitor_3
+    image: monitor:latest
+    entrypoint: python3 /main.py
+    restart: on-failure
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./storage:/states
+    environment:
+      - INTERNAL_PORT=3003
+      - TIMEOUT=10
+      - ID=monitor_3
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
+      - MONITOR_PORT=3003
+      - ELECTION_PORT=3004
+      - LEADER_INFO_PORT=3005
+      - LEADER=2
+      - IS_LEADER=True
 
   filter_avg_rating_server_duration_1:
     container_name: filter_avg_rating_server_duration_1
@@ -35,6 +66,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - MATCH_QUEUE=filter_arsd_queue
       - OUTPUT_QUEUE=output_queue_1
@@ -44,7 +76,7 @@ services:
       - ID_FIELD=token
       - INTERFACE_IP=interface
       - INTERFACE_PORT=3001
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=filter_avg_rating_server_duration_1
@@ -57,6 +89,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - ROW_QUEUE=match_queue
       - QUEUES_TO_SEND=filter_arsd_queue,filter_lmm_queue
@@ -64,7 +97,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=matches_broadcaster
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   group_by_match:
     container_name: group_by_match
@@ -74,6 +107,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - QUEUE_NAME=group_by_player_queue
       - N_REDUCERS=2
@@ -83,7 +117,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=group_by_match
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_group_by_match_1:
     container_name: reducer_group_by_match_1
@@ -93,6 +127,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -104,7 +139,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_group_by_match_1
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_group_by_match_2:
     container_name: reducer_group_by_match_2
@@ -114,6 +149,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -125,7 +161,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_group_by_match_2
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   filter_solo_winner_player_1:
     container_name: filter_solo_winner_player_1
@@ -135,6 +171,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -147,7 +184,7 @@ services:
       - MONITOR_IP=monitor
       - MONITOR_PORT=3003
       - FREQUENCY=3
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
       - SENTINEL_AMOUNT=2
       - ID_FIELD=token
       - ID=filter_solo_winner_player_1
@@ -160,6 +197,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - MATCH_QUEUE=filter_lmm_queue
       - MATCH_TOKEN_EXCHANGE=match_token_exchange
@@ -173,7 +211,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=filter_ladder_map_mirror
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   players_broadcaster:
     container_name: players_broadcaster
@@ -183,6 +221,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - ROW_QUEUE=player_queue
       - QUEUES_TO_SEND=player_cleaner_queue,filter_rating_queue,group_by_player_queue
@@ -190,7 +229,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=players_broadcaster
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   players_cleaner:
     container_name: players_cleaner
@@ -200,6 +239,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - PLAYER_QUEUE=player_cleaner_queue
       - MATCH_FIELD=match
@@ -211,7 +251,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=players_cleaner
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   filter_rating:
     container_name: filter_rating
@@ -221,6 +261,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - PLAYER_QUEUE=filter_rating_queue
       - RATING_FIELD=rating
@@ -233,7 +274,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=filter_rating
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   join_rate_winner:
     container_name: join_rate_winner
@@ -243,6 +284,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - MATCH_TOKEN_EXCHANGE=match_token_exchange
       - N_REDUCERS=2
@@ -255,7 +297,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=join_rate_winner
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   join_top_civ:
     container_name: join_top_civ
@@ -265,6 +307,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - MATCH_TOKEN_EXCHANGE=match_token_exchange
       - N_REDUCERS=2
@@ -277,7 +320,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=join_top_civ
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_rate_winner_join_1:
     container_name: reducer_rate_winner_join_1
@@ -287,6 +330,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -301,7 +345,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_rate_winner_join_1
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_rate_winner_join_2:
     container_name: reducer_rate_winner_join_2
@@ -311,6 +355,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -325,7 +370,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_rate_winner_join_2
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_top_civ_join_1:
     container_name: reducer_top_civ_join_1
@@ -335,6 +380,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - JOIN_EXCHANGE=join_top_civ_1
       - MATCH_CONSUMER_ROUTING_KEY=top_civ_routing_key
@@ -347,7 +393,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_top_civ_join_1
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_top_civ_join_2:
     container_name: reducer_top_civ_join_2
@@ -357,6 +403,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - JOIN_EXCHANGE=join_top_civ_2
       - MATCH_CONSUMER_ROUTING_KEY=top_civ_routing_key
@@ -369,7 +416,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_top_civ_join_2
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   group_by_civ_rate_winner:
     container_name: group_by_civ_rate_winner
@@ -379,6 +426,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - QUEUE_NAME=grouped_rate_winner_queue
       - N_REDUCERS=2
@@ -388,7 +436,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=group_by_civ_rate_winner
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_group_by_civ_rate_winner_1:
     container_name: reducer_group_by_civ_rate_winner_1
@@ -398,6 +446,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -410,7 +459,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_group_by_civ_rate_winner_1
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_group_by_civ_rate_winner_2:
     container_name: reducer_group_by_civ_rate_winner_2
@@ -420,6 +469,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -432,7 +482,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_group_by_civ_rate_winner_2
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   group_by_civ_top_civ:
     container_name: group_by_civ_top_civ
@@ -442,6 +492,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     environment:
       - QUEUE_NAME=grouped_top_civ_queue
       - N_REDUCERS=2
@@ -451,7 +502,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=group_by_civ_top_civ
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_group_by_civ_top_civ_1:
     container_name: reducer_group_by_civ_top_civ_1
@@ -461,6 +512,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -473,7 +525,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_group_by_civ_top_civ_1
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   reducer_group_by_civ_top_civ_2:
     container_name: reducer_group_by_civ_top_civ_2
@@ -483,6 +535,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -495,7 +548,7 @@ services:
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=reducer_group_by_civ_top_civ_2
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
 
   winner_rate_calculator_1:
     container_name: winner_rate_calculator_1
@@ -505,6 +558,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -517,7 +571,7 @@ services:
       - MONITOR_IP=monitor
       - MONITOR_PORT=3003
       - FREQUENCY=3
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
       - ID=winner_rate_calculator_1
 
   top_civ_calculator_1:
@@ -528,6 +582,7 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
@@ -540,7 +595,7 @@ services:
       - MONITOR_IP=monitor
       - MONITOR_PORT=3003
       - FREQUENCY=3
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
       - ID=top_civ_calculator_1
 
   interface:
@@ -551,13 +606,14 @@ services:
     depends_on:
       - monitor_1
       - monitor_2
+      - monitor_3
     volumes: 
       - ./storage:/states
     environment:
       - API_PORT=3002
       - SENTINEL_AMOUNT=4
       - INTERNAL_PORT=3001
-      - MONITOR_IPS=monitor_1,monitor_2
+      - MONITOR_IPS=monitor_1,monitor_2,monitor_3
       - MONITOR_PORT=3003
       - FREQUENCY=3
       - ID=interface

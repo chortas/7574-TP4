@@ -52,7 +52,7 @@ MONITOR_PORT = 3003
 
 MONITOR_FREQUENCY = 3
 
-N_MONITORS = 2
+N_MONITORS = 3
 
 MONITOR_IPS = [f"monitor_{i}" for i in range(1, N_MONITORS+1)]
 
@@ -93,7 +93,9 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     
     # monitor
     for i in range(N_MONITORS):
-      env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10, "ID": MONITOR_IPS[i]}
+      env_variables = {"INTERNAL_PORT": MONITOR_PORT, "TIMEOUT": 10, "ID": MONITOR_IPS[i], 
+      "MONITOR_IPS": ",".join(MONITOR_IPS), "MONITOR_PORT": MONITOR_PORT, "ELECTION_PORT": MONITOR_PORT+1,
+      "LEADER_INFO_PORT": MONITOR_PORT+2, "LEADER": N_MONITORS-1, "IS_LEADER": i==(N_MONITORS-1)}
       write_section(compose_file, MONITOR_IPS[i], "monitor", env_variables, monitor = True)
 
     # filter_avg_rating_server_duration
