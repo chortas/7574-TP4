@@ -58,12 +58,16 @@ class FilterSoloWinnerPlayer():
         
         for match, players in matches.items():
             players = self.__remove_duplicates(players)
+            act_request = players[0]["act_request"]
             if self.__meets_the_condition(players) and match not in self.matches:
-                send_message(ch, match, queue_name=self.output_queue)
+                send_message(ch, self.__parse_match(match, act_request), queue_name=self.output_queue)
                 self.matches.append(match)
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
+    def __parse_match(self, match_token, act_request):
+        return json.dumps({"act_request": act_request, "match_token": match_token})
+
     def __meets_the_condition(self, players):
         if len(players) != 2: return False
         rating_winner, rating_loser = (0,0)

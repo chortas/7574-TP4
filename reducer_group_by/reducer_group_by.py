@@ -23,14 +23,17 @@ class ReducerGroupBy():
             logging.info("[REDUCER_GROUP_BY] Found state")
             self.act_sentinel = state["act_sentinel"]
             self.players_to_group = state["players_to_group"]
+            self.act_request = state["act_request"]
         else:
             logging.info("[REDUCER_GROUP_BY] State not found")
             self.players_to_group = {}
             self.act_sentinel = self.sentinel_amount
+            self.act_request = 0
             self.__save_state()
 
     def __save_state(self):
-        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "players_to_group": self.players_to_group})
+        self.state_handler.update_state({"act_sentinel": self.act_sentinel, 
+        "players_to_group": self.players_to_group, "act_request": self.act_request})
 
     def start(self):
         self.heartbeat_sender.start()
@@ -50,12 +53,21 @@ class ReducerGroupBy():
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         for player in players:
+            self.__check_request(player)
             group_by_element = player[self.group_by_field]
             self.players_to_group[group_by_element] = self.players_to_group.get(group_by_element, [])
             self.players_to_group[group_by_element].append(player)
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
+    def __check_request(self, player):
+        pass
+        '''
+        if player["act_request"] != self.act_request and len(self.players_to_group) != 0:
+            self.players_to_group = {}
+            self.act_sentinel = self.sentinel_amount
+        '''
+        
     def __handle_end_group_by(self, ch):
         self.act_sentinel -= 1
         if self.act_sentinel != 0: return        
