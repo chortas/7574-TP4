@@ -24,7 +24,7 @@ class HeartbeatManager(Thread):
         self.leader_info_port = int(os.environ["LEADER_INFO_PORT"])
         self.election_started = SharedValue(False)
         self.__init_state(self.id, change_is_leader_callback)
-        
+        self.sock = None
 
         self.election_listening = Thread(target=self.__start_listening_elections)
         self.leader_listening = Thread(target=self.__start_listening_leaders)
