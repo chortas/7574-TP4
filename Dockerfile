@@ -9,6 +9,7 @@ ENV BATCH_TO_SEND=100000
 ENV N_LINES=250000
 ENV API_IP=interface
 ENV API_PORT=3002
+ENV EXCHANGE_NAMES=output_exchange_1,output_exchange_2,output_exchange_3,output_exchange_4
 COPY client.py /
 COPY main.py /
 COPY match_players.csv /

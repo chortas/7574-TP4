@@ -7,7 +7,8 @@ from common.utils import *
 from common.custom_socket.client_socket import ClientSocket
 
 class Client:
-    def __init__(self, match_queue, match_file, player_queue, player_file, batch_to_send, n_lines, api_address):
+    def __init__(self, match_queue, match_file, player_queue, player_file, 
+    batch_to_send, n_lines, api_address, exchange_names):
         self.match_queue = match_queue
         self.match_file = match_file
         self.player_queue = player_queue
@@ -17,6 +18,7 @@ class Client:
         self.player_sender = Thread(target=self.__send_players)
         self.n_lines = n_lines
         self.api_address = api_address
+        self.exchange_names = exchange_names
 
     def start(self):
         self.act_request = self.__send_request() 
@@ -59,6 +61,7 @@ class Client:
         connection, channel = create_connection_and_channel()
 
         create_queue(channel, queue)
+        self.__create_queues(channel)
 
         with open(file_name, mode='r') as csv_file:
             csv_reader = csv.DictReader(csv_file)    
@@ -87,3 +90,11 @@ class Client:
         self.__send_sentinel()
 
         connection.close()
+
+    def __create_queues(self, channel):
+        routing_key = f"request_{self.act_request}"
+
+        for i, exchange_name in enumerate(self.exchange_names):
+            create_exchange(channel, exchange_name, "direct")
+            create_and_bind_queue(channel, exchange_name, 
+            routing_keys=[routing_key], queue_name=f"result_query_{i+1}_client_{self.act_request}")

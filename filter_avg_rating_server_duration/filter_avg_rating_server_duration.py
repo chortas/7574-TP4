@@ -7,10 +7,10 @@ from common.utils import *
 from common.state_handler import StateHandler
 
 class FilterAvgRatingServerDuration():
-    def __init__(self, match_queue, output_queue, avg_rating_field, server_field, 
+    def __init__(self, match_queue, output_exchange, avg_rating_field, server_field, 
     duration_field, id_field, interface_communicator, heartbeat_sender, id):
         self.match_queue = match_queue
-        self.output_queue = output_queue
+        self.output_exchange = output_exchange
         self.avg_rating_field = avg_rating_field
         self.server_field = server_field
         self.duration_field = duration_field
@@ -38,7 +38,7 @@ class FilterAvgRatingServerDuration():
         connection, channel = create_connection_and_channel()
 
         create_queue(channel, self.match_queue)
-        create_queue(channel, self.output_queue)
+        create_exchange(channel, self.output_exchange, "direct")
 
         consume(channel, self.match_queue, self.__callback, auto_ack=False)
 
@@ -53,7 +53,8 @@ class FilterAvgRatingServerDuration():
             return
         for match in matches:
             if self.__meets_the_condition(match) and match not in self.matches_with_condition:
-                send_message(ch, self.__parse_match(match), queue_name=self.output_queue)
+                logging.info(f"Match meets condition: {match}")
+                send_message(ch, self.__parse_match(match), queue_name=f"request_{match['act_request']}", exchange_name=self.output_exchange)
                 self.matches_with_condition.append(match)
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
