@@ -18,26 +18,35 @@ class Client:
         self.n_lines = n_lines
         self.api_address = api_address
 
-    def _send_request(self):
-        sock = ClientSocket(address = self.api_address)
-        try:
-            sock.send_with_size(json.dumps({}))
-            response = ACK_SCHEME.unpack(sock.recv_with_size(decode=False))[0]
-        except Exception as e:
-            print(e)
-            logging.info("[CLIENT] Request errored")
-            response = False
-        sock.close()
-        return response 
-
     def start(self):
-        if self._send_request():
+        if self.__send_request():
             logging.info("[CLIENT] Request accepted")            
             self.match_sender.start()
             self.player_sender.start()
         else:
             logging.info("[CLIENT] Request declined")
-    
+
+    def __send_request(self):
+        self.interface_sock = ClientSocket(address = self.api_address)
+        try:
+            self.interface_sock.send_with_size(json.dumps({"n_lines": self.n_lines})) # send request
+            response = ACK_SCHEME.unpack(self.interface_sock.recv_with_size(decode=False))[0]
+        except Exception as e:
+            print(e)
+            logging.info("[CLIENT] Request errored")
+            response = False
+        return response
+
+    def __send_sentinel(self):
+        try:
+            logging.info("[CLIENT] Sending sentinel")
+            self.interface_sock.send_with_size(json.dumps({})) # send sentinel
+        except Exception as e:
+            print(e)
+            logging.info("[CLIENT] Sentinel request errored")
+        finally:
+            self.interface_sock.close()
+
     def __send_players(self):
         self.__read_and_send(self.player_file, self.player_queue,
         ["token","match","rating","color","civ","team","winner"])
@@ -70,7 +79,10 @@ class Client:
                 
         if len(lines) != 0: send_message(channel, json.dumps(lines), queue_name=queue)                    
         
-        #send the sentinel
+        # send the sentinel to the broadcasters
         send_message(channel, json.dumps({}), queue_name=queue)     
+
+        # send the sentinel to the interface
+        self.__send_sentinel()
 
         connection.close()
