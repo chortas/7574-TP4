@@ -6,8 +6,8 @@ from .state_handler import StateHandler
 from .filelock import FileLock
 
 class StateHandlerSafe(StateHandler):
-    def __init__(self, node_id):
-        StateHandler.__init__(self, node_id)
+    def __init__(self, node_id, filename="state.json"):
+        StateHandler.__init__(self, node_id, filename)
         self.filelock = FileLock()
 
     def update_state(self, state):
