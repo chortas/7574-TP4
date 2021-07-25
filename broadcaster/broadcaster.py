@@ -9,6 +9,8 @@ class Broadcaster():
         self.queues_to_send = queues_to_send
         self.heartbeat_sender = heartbeat_sender
 
+        self.processed = False
+
     def start(self):
         self.heartbeat_sender.start()
         
@@ -22,6 +24,10 @@ class Broadcaster():
 
     def __callback(self, ch, method, properties, body):
         logging.info(f"Received {len(json.loads(body))} from client")
+
+        if not self.processed:
+            self.processed = True
+            logging.info(f"Received {len(json.loads(body))} from client")
 
         for queue in self.queues_to_send:
             send_message(ch, body, queue_name=queue)

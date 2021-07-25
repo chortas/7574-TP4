@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import threading
-import socket
+import json
 from common.utils import *
 from common.custom_socket.server_socket import ServerSocket
 from common.state_handler_safe import StateHandlerSafe
@@ -26,15 +26,17 @@ class Interface():
         if len(state) != 0:
             logging.info("[INTERFACE] Found state {}".format(state))
             self.status = SharedValue(state["status"])
-            self.sentinels_received = state["sentinels_recieve"]
+            self.sentinels_received = state["sentinels_received"]
+            self.act_request = int(state["act_request"])
         else:
             self.status = SharedValue(INITIAL_STATUS)
             self.sentinels_received = self.sentinels_amount
+            self.act_request = 0
             self.__save_state()
 
     def __save_state(self):
-        self.state_handler.update_state({"sentinels_recieve": self.sentinels_received,
-        "status": self.status.read()})
+        self.state_handler.update_state({"sentinels_received": self.sentinels_received,
+        "status": self.status.read(), "act_request": self.act_request})
     
     def _start_listening_nodes(self):
         while True:
@@ -84,7 +86,7 @@ class Interface():
         logging.info("[INTERFACE] Accepting request of client. Change state to RECEIVING")
         self.__save_state()
         try:
-            self.internal_socket.send_to(client_sock, ACK_SCHEME.pack(True), encode=False)
+            self.internal_socket.send_to(client_sock, json.dumps({"act_request": self.act_request}))
             self.api_socket.recv_from(client_sock, recv_timeout=n_lines/10)
             self.status.update('RUNNING')
             logging.info("[INTERFACE] Accepting request of client. Change state to RUNNING")
@@ -92,6 +94,7 @@ class Interface():
             logging.info("[INTERFACE] The client is down... rejecting query")
             self.status.update('READY')
         finally:
+            self.act_request += 1
             self.__save_state()
             client_sock.close()
         

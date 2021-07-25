@@ -18,6 +18,6 @@ class InterfaceCommunicator:
 
             response = ACK_SCHEME.unpack(self.sock.recv_with_size(decode=False))[0]
             logging.info("[INTERFACE COMMUNICATOR] Received ack")
-        except:
-            logging.info("[INTERFACE COMMUNICATOR] Failed sending finish message")
+        except Exception as e:
+            logging.info(f"[INTERFACE COMMUNICATOR] Failed sending finish message: {e}")
         

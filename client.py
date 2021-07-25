@@ -19,7 +19,8 @@ class Client:
         self.api_address = api_address
 
     def start(self):
-        if self.__send_request():
+        self.act_request = self.__send_request() 
+        if self.act_request != -1:
             logging.info("[CLIENT] Request accepted")            
             self.match_sender.start()
             self.player_sender.start()
@@ -30,12 +31,13 @@ class Client:
         self.interface_sock = ClientSocket(address = self.api_address)
         try:
             self.interface_sock.send_with_size(json.dumps({"n_lines": self.n_lines})) # send request
-            response = ACK_SCHEME.unpack(self.interface_sock.recv_with_size(decode=False))[0]
+            act_request = self.interface_sock.recv_with_size()["act_request"]
+            logging.info(f"[CLIENT] Receiving act_request: {act_request}")
         except Exception as e:
             print(e)
             logging.info("[CLIENT] Request errored")
-            response = False
-        return response
+            act_request = -1
+        return act_request
 
     def __send_sentinel(self):
         try:
@@ -48,14 +50,12 @@ class Client:
             self.interface_sock.close()
 
     def __send_players(self):
-        self.__read_and_send(self.player_file, self.player_queue,
-        ["token","match","rating","color","civ","team","winner"])
+        self.__read_and_send(self.player_file, self.player_queue, self.act_request)
 
     def __send_matches(self):
-        self.__read_and_send(self.match_file, self.match_queue, 
-        ["token","winning_team","mirror","ladder","patch","average_rating","map","map_size","num_players","server","duration"])
+        self.__read_and_send(self.match_file, self.match_queue, self.act_request)
 
-    def __read_and_send(self, file_name, queue, fieldnames):
+    def __read_and_send(self, file_name, queue, act_request):
         connection, channel = create_connection_and_channel()
 
         create_queue(channel, queue)
@@ -66,6 +66,7 @@ class Client:
             counter_lines = 0
             lines = []
             for element in csv_reader:
+                element["act_request"] = act_request
                 counter_lines += 1
                 lines.append(element)
                 counter_batch += 1
