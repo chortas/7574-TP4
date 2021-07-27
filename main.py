@@ -16,6 +16,8 @@ def parse_config_params():
         config_params["n_lines"] = os.environ["N_LINES"]
         config_params["api_ip"] = os.environ["API_IP"]
         config_params["api_port"] = os.environ["API_PORT"]
+        config_params["exchange_names"] = os.environ["EXCHANGE_NAMES"]
+
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
     except ValueError as e:
@@ -30,7 +32,9 @@ def main():
 
     client = Client(config_params["match_queue"], config_params["match_file"], 
     config_params["player_queue"], config_params["player_file"], 
-    int(config_params["batch_to_send"]), int(config_params["n_lines"]), (config_params['api_ip'], int(config_params['api_port'])))
+    int(config_params["batch_to_send"]), int(config_params["n_lines"]), 
+    (config_params['api_ip'], int(config_params['api_port'])), 
+    config_params["exchange_names"].split(','))
     client.start()
 
 def initialize_log():

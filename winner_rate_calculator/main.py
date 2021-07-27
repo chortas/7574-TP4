@@ -10,7 +10,7 @@ def parse_config_params():
     config_params = {}
     try:
         config_params["grouped_players_queue"] = os.environ["GROUPED_PLAYERS_QUEUE"]
-        config_params["output_queue"] = os.environ["OUTPUT_QUEUE"]
+        config_params["output_exchange"] = os.environ["OUTPUT_EXCHANGE"]
         config_params["winner_field"] = os.environ["WINNER_FIELD"]
         config_params["sentinel_amount"] = os.environ["SENTINEL_AMOUNT"]
         config_params["id"] = os.environ["ID"]
@@ -31,7 +31,7 @@ def main():
     heartbeat_sender = HeartbeatSender(config_params["id"])
 
     winner_rate_calculator = WinnerRateCalculator(config_params["id"], config_params["grouped_players_queue"], 
-    config_params["output_queue"], config_params["winner_field"], 
+    config_params["output_exchange"], config_params["winner_field"], 
     int(config_params["sentinel_amount"]), interface_communicator, heartbeat_sender)
 
     winner_rate_calculator.start()

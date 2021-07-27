@@ -5,10 +5,10 @@ from common.utils import *
 from common.state_handler import StateHandler
 
 class FilterSoloWinnerPlayer():
-    def __init__(self, grouped_players_queue, output_queue, rating_field, winner_field, 
+    def __init__(self, grouped_players_queue, output_exchange, rating_field, winner_field, 
     interface_communicator, heartbeat_sender, id, sentinel_amount, id_field):
         self.grouped_players_queue = grouped_players_queue
-        self.output_queue = output_queue
+        self.output_exchange = output_exchange
         self.rating_field = rating_field
         self.winner_field = winner_field
         self.interface_communicator = interface_communicator
@@ -38,7 +38,7 @@ class FilterSoloWinnerPlayer():
         connection, channel = create_connection_and_channel()
 
         create_queue(channel, self.grouped_players_queue)
-        create_queue(channel, self.output_queue)
+        create_exchange(channel, self.output_exchange, "direct")
 
         consume(channel, self.grouped_players_queue, self.__callback, auto_ack=False)
 
@@ -58,12 +58,17 @@ class FilterSoloWinnerPlayer():
         
         for match, players in matches.items():
             players = self.__remove_duplicates(players)
+            act_request = players[0]["act_request"]
+            
             if self.__meets_the_condition(players) and match not in self.matches:
-                send_message(ch, match, queue_name=self.output_queue)
+                send_message(ch, self.__parse_match(match, act_request), queue_name=f"request_{act_request}", exchange_name=self.output_exchange)            
                 self.matches.append(match)
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
+    def __parse_match(self, match_token, act_request):
+        return json.dumps({"act_request": act_request, "match_token": match_token})
+
     def __meets_the_condition(self, players):
         if len(players) != 2: return False
         rating_winner, rating_loser = (0,0)

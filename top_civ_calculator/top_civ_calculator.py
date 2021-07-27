@@ -6,11 +6,11 @@ from common.state_handler import StateHandler
 from collections import Counter
 
 class TopCivCalculator():
-    def __init__(self, id, grouped_players_queue, output_queue, id_field, sentinel_amount, 
+    def __init__(self, id, grouped_players_queue, output_exchange, id_field, sentinel_amount, 
     interface_communicator, heartbeat_sender):
         logging.info("[TOP_CIV_CALCULATOR] Init")
         self.grouped_players_queue = grouped_players_queue
-        self.output_queue = output_queue
+        self.output_exchange = output_exchange
         self.id_field = id_field
         self.sentinel_amount = sentinel_amount
         self.act_sentinel = sentinel_amount
@@ -24,7 +24,7 @@ class TopCivCalculator():
         connection, channel = create_connection_and_channel()
 
         create_queue(channel, self.grouped_players_queue)
-        create_queue(channel, self.output_queue)
+        create_exchange(channel, self.output_exchange, "direct")
         
         consume(channel, self.grouped_players_queue, self.__callback, auto_ack=False)
 
@@ -35,13 +35,16 @@ class TopCivCalculator():
             logging.info("[TOP_CIV_CALCULATOR] Found state {}".format(state))
             self.act_sentinel = state["act_sentinel"]
             self.civilizations = state["civilizations"]
+            self.act_request = state["act_request"]
         else:
             self.civilizations = {}
             self.act_sentinel = self.sentinel_amount
+            self.act_request = 0
             self.__save_state()
 
     def __save_state(self):
-        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "civilizations": self.civilizations})
+        self.state_handler.update_state({"act_sentinel": self.act_sentinel, 
+        "civilizations": self.civilizations, "act_request": self.act_request})
 
     def __callback(self, ch, method, properties, body):
         players_by_civ = json.loads(body)
@@ -57,8 +60,10 @@ class TopCivCalculator():
             if civ in self.civilizations:
                 continue
             token_by_civ = set()
-            victories = 0
             players = players_by_civ[civ]
+            
+            self.__check_request(players[0])
+
             for player in players:
                 token = player[self.id_field]
                 if token not in token_by_civ:
@@ -67,14 +72,24 @@ class TopCivCalculator():
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
+    def __check_request(self, player):
+        if player["act_request"] != self.act_request and len(self.civilizations) != 0:
+            self.civilizations = {}
+            self.act_sentinel = self.sentinel_amount
+        self.act_request = player["act_request"]        
+
     def __send_top_5(self, channel):
         self.act_sentinel -= 1
         if self.act_sentinel != 0:
             self.__save_state()
             return False
         logging.info(f"To send top 5 -> civilizations: {self.civilizations}")
+
         top_5_civilizations = dict(Counter(self.civilizations).most_common(5))
-        send_message(channel, json.dumps(top_5_civilizations), queue_name=self.output_queue)
+        top_5_civilizations["act_request"] = self.act_request
+
+        send_message(channel, json.dumps(top_5_civilizations), queue_name=f"request_{self.act_request}", exchange_name=self.output_exchange)            
+        
         self.civilizations = {}
         self.act_sentinel = self.sentinel_amount
         self.__save_state()

@@ -42,8 +42,6 @@ docker-compose-up: docker-image
 .PHONY: docker-compose-up
 
 docker-compose-down:
-	docker stop monitor_1
-	docker stop monitor_2
 	docker-compose -f docker-compose.yml stop -t 1
 	docker-compose -f docker-compose.yml down
 .PHONY: docker-compose-down

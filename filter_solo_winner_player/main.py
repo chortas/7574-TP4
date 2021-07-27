@@ -10,7 +10,7 @@ def parse_config_params():
     config_params = {}
     try:
         config_params["grouped_players_queue"] = os.environ["GROUPED_PLAYERS_QUEUE"]
-        config_params["output_queue"] = os.environ["OUTPUT_QUEUE"]
+        config_params["output_exchange"] = os.environ["OUTPUT_EXCHANGE"]
         config_params["rating_field"] = os.environ["RATING_FIELD"]
         config_params["winner_field"] = os.environ["WINNER_FIELD"]
         config_params["id"] = os.environ["ID"]
@@ -33,7 +33,7 @@ def main():
     heartbeat_sender = HeartbeatSender()
 
     filter_swp = FilterSoloWinnerPlayer(config_params["grouped_players_queue"], 
-    config_params["output_queue"], config_params["rating_field"], 
+    config_params["output_exchange"], config_params["rating_field"], 
     config_params["winner_field"], interface_communicator, heartbeat_sender, 
     config_params["id"], int(config_params["sentinel_amount"]), config_params["id_field"])
     

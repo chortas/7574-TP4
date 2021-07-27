@@ -10,7 +10,7 @@ def parse_config_params():
     config_params = {}
     try:
         config_params["match_queue"] = os.environ["MATCH_QUEUE"]
-        config_params["output_queue"] = os.environ["OUTPUT_QUEUE"]
+        config_params["output_exchange"] = os.environ["OUTPUT_EXCHANGE"]
         config_params["avg_rating_field"] = os.environ["AVG_RATING_FIELD"]
         config_params["server_field"] = os.environ["SERVER_FIELD"]
         config_params["duration_field"] = os.environ["DURATION_FIELD"]
@@ -33,7 +33,7 @@ def main():
     heartbeat_sender = HeartbeatSender()
 
     filter_arsd = FilterAvgRatingServerDuration(config_params["match_queue"], 
-    config_params["output_queue"], config_params["avg_rating_field"], 
+    config_params["output_exchange"], config_params["avg_rating_field"], 
     config_params["server_field"], config_params["duration_field"], config_params["id_field"], 
     interface_communicator, heartbeat_sender, config_params["id"])
     

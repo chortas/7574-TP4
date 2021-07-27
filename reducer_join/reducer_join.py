@@ -31,18 +31,20 @@ class ReducerJoin():
             self.matches_and_players = state["matches_and_players"]
             self.matches = set(state["matches"])
             self.players = set(state["players"])
+            self.act_request = state["act_request"]
         else:
             logging.info("[REDUCER_JOIN] No state saved")
             self.matches_and_players = {}
             self.matches = set()
             self.players = set()
             self.len_join = LEN_JOIN # to know when to stop
+            self.act_request = 0
             self.__save_state()
             
-
     def __save_state(self):
         self.state_handler.update_state({"len_join": self.len_join, "matches_and_players": self.matches_and_players,
-        "matches": list(self.matches), "players": list(self.players)})
+        "matches": list(self.matches), "players": list(self.players), 
+        "act_request": self.act_request})
 
     def start(self):
         self.heartbeat_sender.start()
@@ -62,11 +64,23 @@ class ReducerJoin():
             self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
+        
+        self.__check_request(elements[0])
         for element in elements:
             self.__store_matches_and_players(element, method)
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
-    
+
+    def __check_request(self, element):
+        logging.info("[REDUCER_JOIN] About to check request")
+        if element["act_request"] != self.act_request and (len(self.matches) != 0 or len(self.players) != 0):
+            logging.info("[REDUCER_JOIN] The client has failed previously")
+            self.matches = set()
+            self.players = set()
+            self.matches_and_players = {}
+            self.len_join = LEN_JOIN
+        self.act_request = element["act_request"]
+        
     def __handle_end_join(self, ch):
         self.len_join -= 1
         if self.len_join == 0:

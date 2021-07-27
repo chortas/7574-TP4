@@ -99,7 +99,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
       write_section(compose_file, MONITOR_IPS[i], "monitor", env_variables, monitor = True)
 
     # filter_avg_rating_server_duration
-    env_variables = {"MATCH_QUEUE": "filter_arsd_queue", "OUTPUT_QUEUE": "output_queue_1", 
+    env_variables = {"MATCH_QUEUE": "filter_arsd_queue", "OUTPUT_EXCHANGE": "output_exchange_1", 
     "AVG_RATING_FIELD": "average_rating", "SERVER_FIELD": "server",
     "DURATION_FIELD": "duration", "ID_FIELD": "token",
     "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT,
@@ -134,7 +134,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     
     # filter_solo_winner_player
     env_variables = {"GROUPED_PLAYERS_QUEUE": "grouped_players_queue_filter_swp", 
-    "OUTPUT_QUEUE": "output_queue_2", "RATING_FIELD": "rating", "WINNER_FIELD": "winner", 
+    "OUTPUT_EXCHANGE": "output_exchange_2", "RATING_FIELD": "rating", "WINNER_FIELD": "winner", 
     "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT, "MONITOR_IP": "monitor", 
     "MONITOR_PORT": MONITOR_PORT, "FREQUENCY": MONITOR_FREQUENCY, 
     "MONITOR_IPS": ",".join(MONITOR_IPS), "SENTINEL_AMOUNT": 2, "ID_FIELD": "token"}    
@@ -263,7 +263,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
 
     # winner_rate_calculator
     env_variables = {"GROUPED_PLAYERS_QUEUE": "winner_rate_calculator_queue", 
-    "OUTPUT_QUEUE": "output_queue_3", "WINNER_FIELD": "winner", 
+    "OUTPUT_EXCHANGE": "output_exchange_3", "WINNER_FIELD": "winner", 
     "SENTINEL_AMOUNT": N_REDUCERS_GROUP_BY_CIV_RATE_WINNER,
     "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT,
     "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT, 
@@ -274,7 +274,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
 
     # top_civ_calculator
     env_variables = {"GROUPED_PLAYERS_QUEUE": "top_civ_calculator_queue", 
-    "OUTPUT_QUEUE": "output_queue_4", "ID_FIELD": "token", 
+    "OUTPUT_EXCHANGE": "output_exchange_4", "ID_FIELD": "token", 
     "SENTINEL_AMOUNT": N_REDUCERS_GROUP_BY_CIV_TOP_CIV,
     "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT,
     "MONITOR_IP": "monitor", "MONITOR_PORT": MONITOR_PORT, 

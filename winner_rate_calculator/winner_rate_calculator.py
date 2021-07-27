@@ -5,10 +5,10 @@ from common.utils import *
 from common.state_handler import StateHandler
 
 class WinnerRateCalculator():
-    def __init__(self, id, grouped_players_queue, output_queue, winner_field, 
+    def __init__(self, id, grouped_players_queue, output_exchange, winner_field, 
     sentinel_amount, interface_communicator, heartbeat_sender):
         self.grouped_players_queue = grouped_players_queue
-        self.output_queue = output_queue
+        self.output_exchange = output_exchange
         self.winner_field = winner_field
         self.interface_communicator = interface_communicator
         self.sentinel_amount = sentinel_amount
@@ -21,7 +21,7 @@ class WinnerRateCalculator():
         connection, channel = create_connection_and_channel()
 
         create_queue(channel, self.grouped_players_queue)
-        create_queue(channel, self.output_queue)
+        create_exchange(channel, self.output_exchange, "direct")
 
         consume(channel, self.grouped_players_queue, self.__callback, auto_ack=False)
 
@@ -64,9 +64,13 @@ class WinnerRateCalculator():
             for player in players:
                 if player[self.winner_field] == "True":
                     victories += 1
+            
+            act_request = players[0]["act_request"]
+            
             winner_rate = (victories / len(players)) * 100
-            result = {civ: winner_rate}
-            send_message(ch, json.dumps(result), queue_name=self.output_queue)
+            result = {civ: winner_rate, "act_request": act_request}
+
+            send_message(ch, json.dumps(result), queue_name=f"request_{act_request}", exchange_name=self.output_exchange)            
         self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        
+    

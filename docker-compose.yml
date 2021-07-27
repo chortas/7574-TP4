@@ -69,7 +69,7 @@ services:
       - monitor_3
     environment:
       - MATCH_QUEUE=filter_arsd_queue
-      - OUTPUT_QUEUE=output_queue_1
+      - OUTPUT_EXCHANGE=output_exchange_1
       - AVG_RATING_FIELD=average_rating
       - SERVER_FIELD=server
       - DURATION_FIELD=duration
@@ -176,7 +176,7 @@ services:
       - ./storage:/states
     environment:
       - GROUPED_PLAYERS_QUEUE=grouped_players_queue_filter_swp
-      - OUTPUT_QUEUE=output_queue_2
+      - OUTPUT_EXCHANGE=output_exchange_2
       - RATING_FIELD=rating
       - WINNER_FIELD=winner
       - INTERFACE_IP=interface
@@ -563,7 +563,7 @@ services:
       - ./storage:/states
     environment:
       - GROUPED_PLAYERS_QUEUE=winner_rate_calculator_queue
-      - OUTPUT_QUEUE=output_queue_3
+      - OUTPUT_EXCHANGE=output_exchange_3
       - WINNER_FIELD=winner
       - SENTINEL_AMOUNT=2
       - INTERFACE_IP=interface
@@ -587,7 +587,7 @@ services:
       - ./storage:/states
     environment:
       - GROUPED_PLAYERS_QUEUE=top_civ_calculator_queue
-      - OUTPUT_QUEUE=output_queue_4
+      - OUTPUT_EXCHANGE=output_exchange_4
       - ID_FIELD=token
       - SENTINEL_AMOUNT=2
       - INTERFACE_IP=interface
