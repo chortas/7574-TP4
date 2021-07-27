@@ -54,6 +54,8 @@ class TopCivCalculator():
             return
 
         for civ in players_by_civ:
+            if civ in self.civilizations:
+                continue
             token_by_civ = set()
             victories = 0
             players = players_by_civ[civ]

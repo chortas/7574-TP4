@@ -172,6 +172,8 @@ services:
       - monitor_1
       - monitor_2
       - monitor_3
+    volumes: 
+      - ./storage:/states
     environment:
       - GROUPED_PLAYERS_QUEUE=grouped_players_queue_filter_swp
       - OUTPUT_QUEUE=output_queue_2
@@ -184,6 +186,7 @@ services:
       - FREQUENCY=3
       - MONITOR_IPS=monitor_1,monitor_2,monitor_3
       - SENTINEL_AMOUNT=2
+      - ID_FIELD=token
       - ID=filter_solo_winner_player_1
 
   filter_ladder_map_mirror:

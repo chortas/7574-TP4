@@ -31,12 +31,14 @@ class WinnerRateCalculator():
         if len(state) != 0:
             logging.info("[WINNER RATE CALCULATOR] Found state {}".format(state))
             self.act_sentinel = state["act_sentinel"]
+            self.civs = state["civs"]
         else:
             self.act_sentinel = self.sentinel_amount
+            self.civs = []
             self.__save_state()
 
     def __save_state(self):
-        self.state_handler.update_state({"act_sentinel": self.act_sentinel})
+        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "civs": self.civs})
 
     def __callback(self, ch, method, properties, body):
         logging.info("To send winner rate result")
@@ -46,6 +48,7 @@ class WinnerRateCalculator():
             self.act_sentinel -= 1
             if self.act_sentinel == 0:
                 self.act_sentinel = self.sentinel_amount
+                self.civs = []
                 logging.info("[WINNER_RATE_CALCULATOR] End of file")
                 self.interface_communicator.send_finish_message()
             self.__save_state()
@@ -53,6 +56,9 @@ class WinnerRateCalculator():
             return
 
         for civ in players_by_civ:
+            if civ in self.civs:
+                continue
+            self.civs.append(civ)
             victories = 0
             players = players_by_civ[civ]
             for player in players:
@@ -61,4 +67,6 @@ class WinnerRateCalculator():
             winner_rate = (victories / len(players)) * 100
             result = {civ: winner_rate}
             send_message(ch, json.dumps(result), queue_name=self.output_queue)
+        self.__save_state()
         ch.basic_ack(delivery_tag=method.delivery_tag)
+        
