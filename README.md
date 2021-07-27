@@ -19,3 +19,7 @@ Para que el flujo del trabajo práctico tenga sentido es necesario correr primer
 - Caso contrario -> `make docker-compose-up`
 
 3. Correr el cliente -> `./client_run.sh`
+
+### Documentación
+
+https://docs.google.com/document/d/1bg8r3Rn-eCd014MPBOZxOh47sCh943EmTOtXtM0OC_Q/edit?usp=sharing 
