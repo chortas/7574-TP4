@@ -27,8 +27,6 @@ class Broadcaster():
         for queue in self.queues_to_send:
             if len(json.loads(body)) == 0:
                 send_message(ch, json.dumps({"sentinel": self.id}), queue_name=queue)
-                send_message(ch, json.dumps({"sentinel": self.id}), queue_name=queue) # TODO: leave this only for testing duplicates
             else:
                 send_message(ch, body, queue_name=queue)
-                send_message(ch, body, queue_name=queue) # TODO: leave this only for testing duplicates
         ch.basic_ack(delivery_tag=method.delivery_tag)
