@@ -19,6 +19,7 @@ services:
       - LEADER_INFO_PORT=3005
       - LEADER=2
       - IS_LEADER=False
+      - SLEEP_FREQUENCY=3
 
   monitor_2:
     container_name: monitor_2
@@ -38,6 +39,7 @@ services:
       - LEADER_INFO_PORT=3005
       - LEADER=2
       - IS_LEADER=False
+      - SLEEP_FREQUENCY=3
 
   monitor_3:
     container_name: monitor_3
@@ -57,6 +59,7 @@ services:
       - LEADER_INFO_PORT=3005
       - LEADER=2
       - IS_LEADER=True
+      - SLEEP_FREQUENCY=3
 
   filter_avg_rating_server_duration_1:
     container_name: filter_avg_rating_server_duration_1

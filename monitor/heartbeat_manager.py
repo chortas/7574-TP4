@@ -12,7 +12,7 @@ from common.state_handler_safe import StateHandlerSafe
 from heartbeat_sender_single_monitor import HeartbeatSenderSingleMonitor
 
 class HeartbeatManager(Thread):
-    def __init__(self, node_id = None, change_is_leader_callback=None):
+    def __init__(self, sleep_frequency, node_id = None, change_is_leader_callback=None):
         Thread.__init__(self)
         self.hosts = os.environ["MONITOR_IPS"].split(',')
         logging.info(f"Hosts: {self.hosts}")
@@ -31,7 +31,8 @@ class HeartbeatManager(Thread):
         self.heartbeat_senders = []
         for host in self.hosts:
             if host == self.id: continue
-            self.heartbeat_senders.append(HeartbeatSenderSingleMonitor(self.id, host, self.monitor_port, self.__start_election))
+            self.heartbeat_senders.append(HeartbeatSenderSingleMonitor(self.id, host, 
+            self.monitor_port, self.__start_election, sleep_frequency))
 
     
     def __start_listening_elections(self):
