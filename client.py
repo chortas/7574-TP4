@@ -46,10 +46,7 @@ class Client:
             logging.info("[CLIENT] Sending sentinel")
             self.interface_sock.send_with_size(json.dumps({})) # send sentinel
         except Exception as e:
-            print(e)
-            logging.info("[CLIENT] Sentinel request errored")
-        finally:
-            self.interface_sock.close()
+            logging.info(f"[CLIENT] Sentinel request errored: {e}")
 
     def __send_players(self):
         self.__read_and_send(self.player_file, self.player_queue, self.act_request)

@@ -73,7 +73,7 @@ class Interface():
                     self.sentinels_received = 0                    
                     self.__handle_query(client_sock, n_lines)
                     continue
-            self.internal_socket.send_to(client_sock, ACK_SCHEME.pack(False), encode=False)
+            self.api_socket.send_to(client_sock, ACK_SCHEME.pack(False), encode=False)
             client_sock.close()
         
     def start(self):
@@ -86,7 +86,7 @@ class Interface():
         logging.info("[INTERFACE] Accepting request of client. Change state to RECEIVING")
         self.__save_state()
         try:
-            self.internal_socket.send_to(client_sock, json.dumps({"act_request": self.act_request}))
+            self.api_socket.send_to(client_sock, json.dumps({"act_request": self.act_request}))
             self.api_socket.recv_from(client_sock, recv_timeout=n_lines/10)
             self.status.update('RUNNING')
             logging.info("[INTERFACE] Accepting request of client. Change state to RUNNING")
@@ -96,5 +96,4 @@ class Interface():
         finally:
             self.act_request += 1
             self.__save_state()
-            client_sock.close()
         
