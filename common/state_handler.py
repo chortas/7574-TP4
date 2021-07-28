@@ -8,11 +8,13 @@ class StateHandler:
         self.directory = "states/{}/".format(node_id)
         self.filename = filename
         self.path = "./" + self.directory + self.filename
+        self.tmp_path = self.path + "_tmp"
         os.makedirs(self.directory, exist_ok=True)
 
     def update_state(self, state):
-        with open(self.path, "w") as file:
+        with open(self.tmp_path, "w") as file:
             json.dump(state, file)
+        os.rename(self.tmp_path, self.path)
 
     def get_state(self):
         try:
