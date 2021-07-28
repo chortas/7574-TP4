@@ -15,6 +15,7 @@ def parse_config_params():
         config_params["id_field"] = os.environ["ID_FIELD"]
         config_params["join_exchange"] = os.environ["JOIN_EXCHANGE"]
         config_params["join_routing_key"] = os.environ["JOIN_ROUTING_KEY"]
+        config_params["id"] = os.environ["ID"]
 
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -32,7 +33,7 @@ def main():
 
     filter_rating = FilterRating(config_params["player_queue"], config_params["rating_field"], 
     config_params["match_field"], config_params["civ_field"], config_params["id_field"],
-    config_params["join_exchange"], config_params["join_routing_key"], heartbeat_sender)
+    config_params["join_exchange"], config_params["join_routing_key"], heartbeat_sender, config_params["id"])
     
     filter_rating.start()
 

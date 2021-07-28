@@ -13,6 +13,7 @@ def parse_config_params():
         config_params["n_reducers"] = os.environ["N_REDUCERS"]
         config_params["group_by_queue"] = os.environ["GROUP_BY_QUEUE"]
         config_params["group_by_field"] = os.environ["GROUP_BY_FIELD"]
+        config_params["id"] = os.environ["ID"]
 
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -29,7 +30,7 @@ def main():
     heartbeat_sender = HeartbeatSender()
 
     group_by = GroupBy(int(config_params["n_reducers"]), config_params["group_by_queue"], 
-    config_params["group_by_field"], config_params["queue_name"], heartbeat_sender)
+    config_params["group_by_field"], config_params["queue_name"], heartbeat_sender, config_params["id"])
     
     group_by.start()
 

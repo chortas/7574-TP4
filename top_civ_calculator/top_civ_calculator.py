@@ -16,7 +16,8 @@ class TopCivCalculator():
         self.act_sentinel = sentinel_amount
         self.interface_communicator = interface_communicator
         self.heartbeat_sender = heartbeat_sender
-        self.__init_state(id)
+        self.id = id
+        self.__init_state()
     
     def start(self):
         self.heartbeat_sender.start()
@@ -28,34 +29,40 @@ class TopCivCalculator():
         
         consume(channel, self.grouped_players_queue, self.__callback, auto_ack=False)
 
-    def __init_state(self, id):
-        self.state_handler = StateHandler(id)
+    def __init_state(self):
+        self.state_handler = StateHandler(self.id)
         state = self.state_handler.get_state()
         if len(state) != 0:
             logging.info("[TOP_CIV_CALCULATOR] Found state {}".format(state))
             self.act_sentinel = state["act_sentinel"]
             self.civilizations = state["civilizations"]
             self.act_request = state["act_request"]
+            self.sentinels = state["sentinels"]
+            self.finished = state["finished"]
         else:
             self.civilizations = {}
             self.act_sentinel = self.sentinel_amount
             self.act_request = 0
+            self.sentinels = []
+            self.finished = 0
             self.__save_state()
 
     def __save_state(self):
         self.state_handler.update_state({"act_sentinel": self.act_sentinel, 
-        "civilizations": self.civilizations, "act_request": self.act_request})
+        "civilizations": self.civilizations, "act_request": self.act_request,
+        "sentinels": self.sentinels, "finished": self.finished})
 
     def __callback(self, ch, method, properties, body):
         players_by_civ = json.loads(body)
 
-        if len(players_by_civ) == 0:
-            if self.__send_top_5(ch):
+        if "sentinel" in players_by_civ:
+            if self.__send_top_5(ch, players_by_civ["sentinel"]):
                 logging.info("[TOP_CIV_CALCULATOR] End of file")
                 self.interface_communicator.send_finish_message()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
 
+        self.finished = 0
         for civ in players_by_civ:
             if civ in self.civilizations:
                 continue
@@ -78,7 +85,9 @@ class TopCivCalculator():
             self.act_sentinel = self.sentinel_amount
         self.act_request = player["act_request"]        
 
-    def __send_top_5(self, channel):
+    def __send_top_5(self, channel, sentinel):
+        if sentinel in self.sentinels or self.finished: return False
+        self.sentinels.append(sentinel)
         self.act_sentinel -= 1
         if self.act_sentinel != 0:
             self.__save_state()
@@ -92,5 +101,7 @@ class TopCivCalculator():
         
         self.civilizations = {}
         self.act_sentinel = self.sentinel_amount
+        self.sentinels = []
+        self.finished = 1
         self.__save_state()
         return True

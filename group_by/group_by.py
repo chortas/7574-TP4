@@ -7,12 +7,13 @@ from hashlib import sha256
 
 class GroupBy():
     def __init__(self, n_reducers, group_by_queue, group_by_field, queue_name,
-    heartbeat_sender):
+    heartbeat_sender, id):
         self.reducer_queues = [f"{group_by_queue}_{i}" for i in range(1, n_reducers+1)]
         self.n_reducers = n_reducers
         self.group_by_field = group_by_field
         self.queue_name = queue_name
         self.heartbeat_sender = heartbeat_sender
+        self.id = id
     
     def start(self):
         self.heartbeat_sender.start()
@@ -29,9 +30,11 @@ class GroupBy():
     def __callback(self, ch, method, properties, body):
         players = json.loads(body)
 
-        if len(players) == 0:
+        if "sentinel" in players:
+            sentinel = players["sentinel"]
+            new_sentinel = json.dumps({"sentinel": f"{sentinel}_{self.id}"})
             for reducer_queue in self.reducer_queues:
-                send_message(ch, body, queue_name=reducer_queue)
+                send_message(ch, new_sentinel, queue_name=reducer_queue)
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
 

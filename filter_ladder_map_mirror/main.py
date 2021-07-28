@@ -16,6 +16,7 @@ def parse_config_params():
         config_params["map_field"] = os.environ["MAP_FIELD"]
         config_params["mirror_field"] = os.environ["MIRROR_FIELD"]
         config_params["id_field"] = os.environ["ID_FIELD"]
+        config_params["id"] = os.environ["ID"]
 
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -35,7 +36,7 @@ def main():
     config_params["match_token_exchange"], config_params["top_civ_routing_key"], 
     config_params["rate_winner_routing_key"], config_params["ladder_field"], 
     config_params["map_field"], config_params["mirror_field"], config_params["id_field"],
-    heartbeat_sender) 
+    heartbeat_sender, config_params["id"]) 
     
     filter_lmm.start()
 

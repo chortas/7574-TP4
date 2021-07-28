@@ -79,6 +79,7 @@ services:
       - MONITOR_IPS=monitor_1,monitor_2,monitor_3
       - MONITOR_PORT=3003
       - FREQUENCY=3
+      - SENTINEL_AMOUNT=1
       - ID=filter_avg_rating_server_duration_1
 
   matches_broadcaster:

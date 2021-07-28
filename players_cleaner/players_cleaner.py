@@ -3,11 +3,11 @@ import logging
 import json
 from datetime import datetime, timedelta
 from common.utils import *
-from hashlib import sha256
+from hashlib import new, sha256
 
 class PlayersCleaner():
     def __init__(self, player_queue, match_field, civ_field, winner_field, 
-    join_exchange, join_routing_key, heartbeat_sender):
+    join_exchange, join_routing_key, heartbeat_sender, id):
         self.player_queue = player_queue
         self.match_field = match_field
         self.civ_field = civ_field
@@ -15,6 +15,7 @@ class PlayersCleaner():
         self.join_exchange = join_exchange
         self.join_routing_key = join_routing_key
         self.heartbeat_sender = heartbeat_sender
+        self.id = id
 
     def start(self):
         self.heartbeat_sender.start()
@@ -28,9 +29,8 @@ class PlayersCleaner():
 
     def __callback(self, ch, method, properties, body):
         players = json.loads(body)
-        logging.info(f"[PLAYERS_CLEANER] Received {len(players)} players")
-        if len(players) == 0:
-            self.__handle_end_cleaner(ch, body)
+        if "sentinel" in players:
+            self.__handle_end_cleaner(ch)
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         new_players = self.__get_new_players(players)
@@ -38,9 +38,10 @@ class PlayersCleaner():
         logging.info("[PLAYERS_CLEANER] Sent new players")
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    def __handle_end_cleaner(self, ch, body):
+    def __handle_end_cleaner(self, ch):
         logging.info("[PLAYERS_CLEANER] The client already sent all messages")
-        send_message(ch, body, queue_name=self.join_routing_key, exchange_name=self.join_exchange)
+        new_sentinel = json.dumps({"sentinel": self.id})
+        send_message(ch, new_sentinel, queue_name=self.join_routing_key, exchange_name=self.join_exchange)
     
     def __get_new_players(self, players):
         new_players = []
