@@ -36,7 +36,6 @@ class Client:
             act_request = self.interface_sock.recv_with_size()["act_request"]
             logging.info(f"[CLIENT] Receiving act_request: {act_request}")
         except Exception as e:
-            print(e)
             logging.info("[CLIENT] Request errored")
             act_request = -1
         return act_request
