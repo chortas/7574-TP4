@@ -24,13 +24,18 @@ class FilterSoloWinnerPlayer():
             logging.info("[FILTER_SOLO_WINNER_PLAYER] Found state {}".format(state))
             self.act_sentinel = state["act_sentinel"]
             self.matches = state["matches"]
+            self.sentinels = state["sentinels"]
+            self.finished = state["finished"]
         else:
             self.act_sentinel = self.sentinel_amount
             self.matches = []
+            self.sentinels = []
+            self.finished = 0
             self.__save_state()
 
     def __save_state(self):
-        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "matches": self.matches})
+        self.state_handler.update_state({"act_sentinel": self.act_sentinel, "matches": self.matches, 
+        "sentinels": self.sentinels, "finished": self.finished})
 
     def start(self):
         self.heartbeat_sender.start()
@@ -45,17 +50,23 @@ class FilterSoloWinnerPlayer():
     def __callback(self, ch, method, properties, body):
         matches = json.loads(body)
 
-        if len(matches) == 0:
-            self.act_sentinel -= 1
-            if self.act_sentinel == 0:
-                self.act_sentinel = self.sentinel_amount
-                self.matches = []
-                logging.info(f"[FILTER_SOLO_WINNER_PLAYER] End of file")
-                self.interface_communicator.send_finish_message()
-            self.__save_state()
+        if "sentinel" in matches:
+            sentinel = matches["sentinel"]
+            if sentinel not in self.sentinels and not self.finished: 
+                self.sentinels.append(sentinel)
+                self.act_sentinel -= 1
+                if self.act_sentinel == 0:
+                    self.act_sentinel = self.sentinel_amount
+                    self.matches = []
+                    self.sentinels = []
+                    logging.info(f"[FILTER_SOLO_WINNER_PLAYER] End of file")
+                    self.interface_communicator.send_finish_message()
+                    self.finished = 1
+                self.__save_state()
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
+        self.finished = 0
         for match, players in matches.items():
             players = self.__remove_duplicates(players)
             act_request = players[0]["act_request"]

@@ -4,10 +4,11 @@ import json
 from common.utils import *
 
 class Broadcaster():
-    def __init__(self, row_queue, queues_to_send, heartbeat_sender):
+    def __init__(self, row_queue, queues_to_send, heartbeat_sender, id):
         self.row_queue = row_queue
         self.queues_to_send = queues_to_send
         self.heartbeat_sender = heartbeat_sender
+        self.id = id
 
     def start(self):
         self.heartbeat_sender.start()
@@ -24,5 +25,8 @@ class Broadcaster():
         logging.info(f"Received {len(json.loads(body))} from client")
 
         for queue in self.queues_to_send:
-            send_message(ch, body, queue_name=queue)
+            if len(json.loads(body)) == 0:
+                send_message(ch, json.dumps({"sentinel": self.id}), queue_name=queue)
+            else:
+                send_message(ch, body, queue_name=queue)
         ch.basic_ack(delivery_tag=method.delivery_tag)

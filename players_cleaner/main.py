@@ -14,6 +14,7 @@ def parse_config_params():
         config_params["winner_field"] = os.environ["WINNER_FIELD"]
         config_params["join_exchange"] = os.environ["JOIN_EXCHANGE"]
         config_params["join_routing_key"] = os.environ["JOIN_ROUTING_KEY"]
+        config_params["id"] = os.environ["ID"]
 
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -31,7 +32,8 @@ def main():
 
     players_cleaner = PlayersCleaner(config_params["player_queue"],
     config_params["match_field"], config_params["civ_field"], config_params["winner_field"],
-    config_params["join_exchange"], config_params["join_routing_key"], heartbeat_sender)
+    config_params["join_exchange"], config_params["join_routing_key"], heartbeat_sender, 
+    config_params["id"])
 
     players_cleaner.start()
 

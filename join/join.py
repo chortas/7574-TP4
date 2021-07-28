@@ -35,10 +35,12 @@ class Join():
 
     def __callback(self, ch, method, properties, body):
         elements_parsed = json.loads(body) 
-        if len(elements_parsed) == 0:
+        if "sentinel" in elements_parsed:
+            sentinel = elements_parsed["sentinel"]
             logging.info("[JOIN] The client already sent all messages")
             for reducer_exchange in self.reducer_exchanges:
-                send_message(ch, body, queue_name=method.routing_key, exchange_name=reducer_exchange)
+                new_sentinel = json.dumps({"sentinel": f"{sentinel}_ {self.id}"})
+                send_message(ch, new_sentinel, queue_name=method.routing_key, exchange_name=reducer_exchange)
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         

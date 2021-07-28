@@ -16,6 +16,7 @@ def parse_config_params():
         config_params["duration_field"] = os.environ["DURATION_FIELD"]
         config_params["id_field"] = os.environ["ID_FIELD"]
         config_params["id"] = os.environ["ID"]
+        config_params["sentinel_amount"] = os.environ["SENTINEL_AMOUNT"]
 
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -35,7 +36,7 @@ def main():
     filter_arsd = FilterAvgRatingServerDuration(config_params["match_queue"], 
     config_params["output_exchange"], config_params["avg_rating_field"], 
     config_params["server_field"], config_params["duration_field"], config_params["id_field"], 
-    interface_communicator, heartbeat_sender, config_params["id"])
+    interface_communicator, heartbeat_sender, config_params["id"], int(config_params["sentinel_amount"]))
     
     filter_arsd.start()
 

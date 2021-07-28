@@ -6,7 +6,7 @@ from common.utils import *
 class FilterLadderMapMirror():
     def __init__(self, match_queue, match_token_exchange, top_civ_routing_key, 
     rate_winner_routing_key, ladder_field, map_field, mirror_field, id_field,
-    heartbeat_sender):
+    heartbeat_sender, id):
         self.match_queue = match_queue
         self.match_token_exchange = match_token_exchange
         self.top_civ_routing_key = top_civ_routing_key
@@ -16,6 +16,7 @@ class FilterLadderMapMirror():
         self.mirror_field = mirror_field
         self.id_field = id_field
         self.heartbeat_sender = heartbeat_sender
+        self.id = id
 
     def start(self):
         self.heartbeat_sender.start()
@@ -29,7 +30,7 @@ class FilterLadderMapMirror():
 
     def __callback(self, ch, method, properties, body):
         matches = json.loads(body)
-        if len(matches) == 0:
+        if "sentinel" in matches:
            return self.__handle_end_filter(ch, body, method)
 
         winner_rate_matches = []
@@ -49,8 +50,9 @@ class FilterLadderMapMirror():
 
     def __handle_end_filter(self, ch, body, method):
         logging.info(f"[FILTER_LADDER_MAP_MIRROR] The client already sent all messages")
-        send_message(ch, body, queue_name=self.rate_winner_routing_key, exchange_name=self.match_token_exchange)
-        send_message(ch, body, queue_name=self.top_civ_routing_key, exchange_name=self.match_token_exchange)
+        new_sentinel = json.dumps({"sentinel": self.id})
+        send_message(ch, new_sentinel, queue_name=self.rate_winner_routing_key, exchange_name=self.match_token_exchange)
+        send_message(ch, new_sentinel, queue_name=self.top_civ_routing_key, exchange_name=self.match_token_exchange)
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def __meets_winner_rate_condition(self, match):

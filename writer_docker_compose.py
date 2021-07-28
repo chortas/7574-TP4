@@ -104,7 +104,7 @@ with open(DOCKER_COMPOSE_FILE_NAME, "w") as compose_file:
     "DURATION_FIELD": "duration", "ID_FIELD": "token",
     "INTERFACE_IP": INTERFACE_IP, "INTERFACE_PORT": INTERNAL_PORT,
     "MONITOR_IPS": ",".join(MONITOR_IPS), "MONITOR_PORT": MONITOR_PORT,
-    "FREQUENCY": MONITOR_FREQUENCY}
+    "FREQUENCY": MONITOR_FREQUENCY, "SENTINEL_AMOUNT": 1}
     for i in range(1, N_FILTER_ARSD+1):
       env_variables["ID"] = f"filter_avg_rating_server_duration_{i}"
       write_section(compose_file, f"filter_avg_rating_server_duration_{i}", "filter_avg_rating_server_duration", env_variables)

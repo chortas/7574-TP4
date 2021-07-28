@@ -10,6 +10,7 @@ def parse_config_params():
     try:
         config_params["row_queue"] = os.environ["ROW_QUEUE"]
         config_params["queues_to_send"] = os.environ["QUEUES_TO_SEND"].split(',')
+        config_params["id"] = os.environ["ID"]
 
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting".format(e))
@@ -26,7 +27,7 @@ def main():
     heartbeat_sender = HeartbeatSender()
 
     broadcaster = Broadcaster(config_params["row_queue"], config_params["queues_to_send"],
-    heartbeat_sender)
+    heartbeat_sender, config_params["id"])
     
     broadcaster.start()
 

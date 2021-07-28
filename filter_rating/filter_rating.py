@@ -5,7 +5,7 @@ from common.utils import *
 
 class FilterRating():
     def __init__(self, player_queue, rating_field, match_field, civ_field, id_field,
-    join_exchange, join_routing_key, heartbeat_sender):
+    join_exchange, join_routing_key, heartbeat_sender, id):
         self.player_queue = player_queue
         self.rating_field = rating_field
         self.match_field = match_field
@@ -14,6 +14,7 @@ class FilterRating():
         self.join_exchange = join_exchange
         self.join_routing_key = join_routing_key
         self.heartbeat_sender = heartbeat_sender
+        self.id = id
 
     def start(self):
         self.heartbeat_sender.start()
@@ -27,9 +28,10 @@ class FilterRating():
 
     def __callback(self, ch, method, properties, body):
         players = json.loads(body)
-        if len(players) == 0:
+        if "sentinel" in players:
             logging.info("[FILTER_RATING] The client already sent all messages")
-            send_message(ch, body, queue_name=self.join_routing_key, exchange_name=self.join_exchange)
+            new_sentinel = json.dumps({"sentinel": self.id})
+            send_message(ch, new_sentinel, queue_name=self.join_routing_key, exchange_name=self.join_exchange)
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         message = self.__get_message(players)
