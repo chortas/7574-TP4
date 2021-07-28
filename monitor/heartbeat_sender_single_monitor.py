@@ -1,22 +1,17 @@
-import os
 import logging
 import json
 
 from common.custom_socket.client_socket import ClientSocket
-from common.custom_socket.server_socket import ServerSocket
-from common.shared_value import SharedValue
-from common.utils import ACK_SCHEME
 from threading import Thread
-from time import sleep
-from common.state_handler_safe import StateHandlerSafe
 
 class HeartbeatSenderSingleMonitor(Thread):
-    def __init__(self, node_id, monitor_host, monitor_port, start_election_callback):
+    def __init__(self, node_id, monitor_host, monitor_port, start_election_callback, frequency):
         Thread.__init__(self)
         self.monitor_host = monitor_host
         self.monitor_port = monitor_port        
         self.id = node_id
-        self.start_election=start_election_callback
+        self.start_election = start_election_callback
+        self.frequency = frequency
 
     def __init_port(self):
         logging.info(f"[HEARTBEAT_SENDER] Trying to connect with node ({self.monitor_host}, {self.monitor_port})")

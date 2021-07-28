@@ -62,12 +62,11 @@ class HeartbeatSender(Process):
         try:
             logging.info(f"[HEARTBEAT_SENDER] Act host: {act_host}")
             heartbeat_listener_socket = ClientSocket(address = (act_host, self.port))
+            heartbeat_listener_socket.set_timeout(self.frequency)
 
             while True:
-                #logging.info(f"[HEARTBEAT_SENDER] Sending heartbeat from {self.id} to ({act_host},{self.port})")
                 heartbeat_listener_socket.send_with_size(json.dumps({"id": self.id}))
-                #logging.info(f"[HEARTBEAT_SENDER] About to sleep: {self.id}")
-                #sleep(self.frequency)
+                sleep(self.frequency)
 
         except Exception as err:
             logging.info(f"[HEARTBEAT_SENDER] Failed sending heartbeat: {err}")

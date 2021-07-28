@@ -10,13 +10,13 @@ from heartbeat_manager import HeartbeatManager
 from common.shared_value import SharedValue
 
 class Monitor():
-    def __init__(self, id, internal_port, timeout, is_leader):
+    def __init__(self, id, internal_port, timeout, is_leader, sleep_frequency):
         self.timeout = timeout
         self.internal_socket = ServerSocket('', internal_port, 1)
         self.heartbeat_listeners = {}
         self.init_port = 5000
         self.is_leader = SharedValue(is_leader) #default
-        self.heartbeat_manager = HeartbeatManager(id, self.change_is_leader)
+        self.heartbeat_manager = HeartbeatManager(sleep_frequency, id, self.change_is_leader)
         self.__init_state(id, is_leader)
 
     def __init_state(self, id, is_leader):
