@@ -12,11 +12,11 @@ Para que el flujo del trabajo práctico tenga sentido es necesario correr primer
 
 1. Correr rabbit -> `./rabbit_run.sh`.
 
-2. Correr los contenedores que crean las colas. Para esto hay dos opciones:
+2. Correr los contenedores que crean las colas:
 
-- Si los containers no fueron cerrados correctamente en una ejecución previa -> `make restart`
+- Borrar el storage por si quedó de una corrida previa: `sudo rm -rf storage`
 
-- Caso contrario -> `make docker-compose-up`
+- Levantar los contenedores: `make docker-compose-up`
 
 3. Correr el cliente -> `./client_run.sh`
 
